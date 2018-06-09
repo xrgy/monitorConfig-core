@@ -1,0 +1,20 @@
+#foreach($element in $param)
+    #set($rulename = $element.rulename)
+    #set($duration = $element.duration)
+    #set($severity = $element.severity)
+    #set($description = $element.description)
+    #set($summary = $element.summary)
+    #set($monitorId = $element.monitorId)
+    #set($expression = $element.expression)
+    #set($condition = $element.condition)
+ALERT ${rulename}
+#if($condition)
+IF ${condition}!=1 OR ${expression}!=1
+#end
+LABELS {severity="${severity}"}
+ANNOTATIONS{
+description="${description}",
+summary="${summary}",
+current_value="{{$value}}"
+}
+#end

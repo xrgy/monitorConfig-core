@@ -1,0 +1,27 @@
+#foreach($element in $param)
+    #set($rulename = $element.rulename)
+    #set($duration = $element.duration)
+    #set($severity = $element.severity)
+    #set($description = $element.description)
+    #set($summary = $element.summary)
+    #set($monitorId = $element.monitorId)
+    #set($expression = $element.expression)
+    #set($firstCondition = $element.firstCondition)
+    #set($firstThreashold = $element.firstThreashold)
+    #set($expressionMore = $element.expressionMore)
+    #set($secondCondition = $element.secondCondition)
+    #set($secondThreashold = $element.secondThreashold)
+    #set($unit = $element.unit)
+ALERT ${rulename}
+IF ${expression} ${firstCondition} ${firstThreashold}
+#if(${secondThreashold} && ${expressionMore})
+    ${expressionMore} ${expression} ${secondCondition} ${secondThreashold}
+#end
+LABELS {severity="${severity}"}
+ANNOTATIONS{
+description="${description}",
+summary="${summary}",
+threashold="${firstThreashold}${unit}"
+current_value="{{$value}}${unit}"
+}
+#end
