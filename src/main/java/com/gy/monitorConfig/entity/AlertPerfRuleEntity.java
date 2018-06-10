@@ -27,8 +27,8 @@ public class AlertPerfRuleEntity {
     @Column(name = "severity")
     private int severity;
 
-    @Column(name = "alertFirstCondition")
-    private int alert_first_condition;
+    @Column(name = "alert_first_condition")
+    private int alertFirstCondition;
 
     @Column(name = "first_threshold")
     private String firstThreshold;
@@ -46,6 +46,6 @@ public class AlertPerfRuleEntity {
     private String description;
 
     @Column(name = "alert_level")
-    private int alertLevel;
+    private String alertLevel;
 
 }

@@ -1,9 +1,8 @@
 package com.gy.monitorConfig.dao;
 
-import com.gy.monitorConfig.entity.AlertAvlRuleMonitorEntity;
-import com.gy.monitorConfig.entity.AlertPerfRuleMonitorEntity;
-import com.gy.monitorConfig.entity.TestEntity;
+import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,4 +53,33 @@ public interface MonitorConfigDao {
      * @return
      */
     List<Metrics> getMetricByTypeAndMode(String lightType, String monitorMode);
+
+    /**
+     * 判断模板名字是否被使用
+     * @param name
+     * @return
+     */
+    public boolean isTemplateNameDup(String name);
+
+    /**
+     * 持久化模板实体到数据库
+     * @param templateEntity
+     * @return
+     */
+    public boolean addTemplate(AlertRuleTemplateEntity templateEntity);
+
+
+    /**
+     * 持久化可用性规则到数据库
+     * @param entity
+     * @return
+     */
+    public boolean addAvlRule(AlertAvlRuleEntity entity);
+
+    /**
+     * 持久化性能规则到数据库
+     * @param entity
+     * @return
+     */
+    public boolean addPerfRule(AlertPerfRuleEntity entity);
 }

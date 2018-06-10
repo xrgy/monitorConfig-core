@@ -26,7 +26,7 @@ public class AlertRuleTemplateEntity {
     private String templateName;
 
     @Column(name = "monitor_mode")
-    private String monitor_mode;
+    private String monitorMode;
 
     @Column(name = "template_type")
     private int templateType;

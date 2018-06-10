@@ -3,6 +3,7 @@ package com.gy.monitorConfig.service;
 import com.gy.monitorConfig.entity.AlertAvlRuleMonitorEntity;
 import com.gy.monitorConfig.entity.AlertPerfRuleMonitorEntity;
 import com.gy.monitorConfig.entity.TestEntity;
+import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
 
 import java.util.List;
@@ -40,4 +41,19 @@ public interface MonitorConfigService {
      * @return
      */
     public ResMetricInfo getMetricInfo(String lightType, String monitorMode);
+
+    /**
+     * 判断模板名字是否被使用
+     * @param name
+     * @return
+     */
+    public boolean isTemplateNameDup(String name);
+
+    /**
+     * 新建模板
+     * @param view
+     * @return
+     */
+    public boolean addTemplate(NewTemplateView view);
+
 }
