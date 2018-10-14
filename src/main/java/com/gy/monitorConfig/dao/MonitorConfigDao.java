@@ -82,4 +82,46 @@ public interface MonitorConfigDao {
      * @return
      */
     public boolean addPerfRule(AlertPerfRuleEntity entity);
+
+    /**
+     * 根据三级规格和监控模式获取监控模板
+     * @param lightType
+     * @param monitorMode
+     * @return
+     */
+    public List<AlertRuleTemplateEntity> getTemplateByLightType(String lightType, String monitorMode);
+
+
+    /**
+     * 根据模板id获取可用性规则
+     * @param templateId
+     * @return
+     */
+    public List<AlertAvlRuleEntity> getAvlRuleByTemplateId(String templateId);
+
+    /**
+     * 根据模板id获取性能规则
+     * @param templateId
+     * @return
+     */
+    public List<AlertPerfRuleEntity> getPerfRuleByTemplateId(String templateId);
+
+    /**
+     * 持久化可用性监控实体到数据库
+     * @param x
+     */
+    public boolean addAvlRuleMonitor(AlertAvlRuleMonitorEntity x);
+
+    /**
+     * 持久化性能监控实体到数据库
+     * @param x
+     */
+    public boolean addPerfRuleMonitor(AlertPerfRuleMonitorEntity x);
+
+    /**
+     * 持久化模板监控实体到数据库
+     * @param templateMonitorEntity
+     * @return
+     */
+    boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
 }

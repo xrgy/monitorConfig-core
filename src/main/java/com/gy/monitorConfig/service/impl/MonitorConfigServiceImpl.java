@@ -1,5 +1,7 @@
 package com.gy.monitorConfig.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.common.MonitorConfigEnum;
 import com.gy.monitorConfig.dao.MonitorConfigDao;
 import com.gy.monitorConfig.entity.*;
@@ -34,6 +36,8 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     @Autowired
     MonitorService monitorService;
 
+    @Autowired
+    ObjectMapper objectMapper;
     private static final String ALERT_RULE_TEMPLATE_PATH = "/template/alert_rule";
     private static final String LEVEL_ONE = "one";
     private static final String LEVEL_TWO = "two";
@@ -174,6 +178,45 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return false;
     }
 
+    @Override
+    public String getTemplateByLightType(String lightType, String monitorMode) throws JsonProcessingException {
+        List<LightTypeEntity> lightTypeList = monitorService.getLightTypeEntity();
+        Optional<LightTypeEntity> lightTypeEntity =  lightTypeList.stream().filter(x-> x.getName().equals(lightType)).findFirst();
+        return  objectMapper.writeValueAsString(lightTypeEntity.map(lightTypeEntity1 -> dao.getTemplateByLightType(lightTypeEntity1.getUuid(), monitorMode)).orElse(null));
+
+    }
+
+    @Override
+    public List<AlertAvlRuleEntity> getAvlRuleByTemplateId(String templateId) {
+        return dao.getAvlRuleByTemplateId(templateId);
+    }
+
+    @Override
+    public List<AlertPerfRuleEntity> getPerfRuleByTemplateId(String templateId) {
+        return dao.getPerfRuleByTemplateId(templateId);
+    }
+
+    @Override
+    public boolean addAvlRuleMonitorList(List<AlertAvlRuleMonitorEntity> avlRuleMonitorList) {
+        avlRuleMonitorList.forEach(x->{
+            dao.addAvlRuleMonitor(x);
+        });
+        return true;
+    }
+
+    @Override
+    public boolean addPerfRuleMonitorList(List<AlertPerfRuleMonitorEntity> perfRuleMonitorList) {
+        perfRuleMonitorList.forEach(x->{
+            dao.addPerfRuleMonitor(x);
+        });
+        return true;
+    }
+
+    @Override
+    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
+        return dao.addTemplateMonitor(templateMonitorEntity);
+    }
+
     private AlertRuleEntity convert2CommonRule(MetricInfo info,String level){
         AlertRuleEntity ruleEntity = new AlertRuleEntity();
         if (level.equals(LEVEL_ONE)){
@@ -198,4 +241,6 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return ruleEntity;
 
     }
+
+
 }

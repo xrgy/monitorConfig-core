@@ -141,4 +141,60 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         }
     }
 
+    @Override
+    public List<AlertRuleTemplateEntity> getTemplateByLightType(String lightTypeUuid, String monitorMode) {
+        String sql = "From AlertRuleTemplateEntity Where monitorMode =:monitorMode AND resourceUuid =:resourceUuid";
+        return em.createQuery(sql, AlertRuleTemplateEntity.class)
+                .setParameter("monitorMode", monitorMode)
+                .setParameter("resourceUuid", lightTypeUuid)
+                .getResultList();
+    }
+
+    @Override
+    public List<AlertAvlRuleEntity> getAvlRuleByTemplateId(String templateId) {
+        String sql = "From AlertAvlRuleEntity where templateUuid =:templateId";
+        return em.createQuery(sql,AlertAvlRuleEntity.class)
+                .setParameter("templateId",templateId)
+                .getResultList();
+    }
+
+    @Override
+    public List<AlertPerfRuleEntity> getPerfRuleByTemplateId(String templateId) {
+        String sql = "From AlertPerfRuleEntity where templateUuid =:templateId";
+        return em.createQuery(sql,AlertPerfRuleEntity.class)
+                .setParameter("templateId",templateId)
+                .getResultList();
+    }
+
+    @Override
+    public boolean addAvlRuleMonitor(AlertAvlRuleMonitorEntity x) {
+        try {
+            em.merge(x);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean addPerfRuleMonitor(AlertPerfRuleMonitorEntity x) {
+        try {
+            em.merge(x);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
+        try {
+            em.merge(templateMonitorEntity);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+
 }
