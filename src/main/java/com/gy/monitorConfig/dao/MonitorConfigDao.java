@@ -124,4 +124,11 @@ public interface MonitorConfigDao {
      * @return
      */
     boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
+
+    /**
+     * 通过三级规格获取该资源的指标列表
+     * @param lightTypeId
+     * @return
+     */
+    List<Metrics> getMetricsByLightType(String lightTypeId);
 }

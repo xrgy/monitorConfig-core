@@ -196,5 +196,13 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         }
     }
 
+    @Override
+    public List<Metrics> getMetricsByLightType(String lightTypeId) {
+        String sql = "From Metrics where metricLightTypeId =:lightTypeId";
+        return em.createQuery(sql,Metrics.class)
+                .setParameter("lightTypeId",lightTypeId)
+                .getResultList();
+    }
+
 
 }

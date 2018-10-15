@@ -2,6 +2,7 @@ package com.gy.monitorConfig.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.gy.monitorConfig.entity.*;
+import com.gy.monitorConfig.entity.metric.Metrics;
 import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
 
@@ -99,4 +100,19 @@ public interface MonitorConfigService {
      * @return
      */
     boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
+
+    /**
+     * 通过三级规格获取该资源指标列表
+     * @param lightTypeId
+     * @return
+     */
+    List<Metrics> getMetricsByLightType(String lightTypeId);
+
+    /**
+     * 组装模板到etcd
+     * @param lightTypeId
+     * @param templateId
+     * @param ruleMonitorEntity
+     */
+    void addAlertTemplateToEtcd(String lightTypeId, String templateId, RuleMonitorEntity ruleMonitorEntity);
 }

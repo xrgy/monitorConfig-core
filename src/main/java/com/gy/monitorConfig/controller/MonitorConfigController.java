@@ -134,4 +134,10 @@ public class MonitorConfigController {
         AlertRuleTemplateMonitorEntity templateMonitorEntity = mapper.readValue(data,AlertRuleTemplateMonitorEntity.class);
         return service.addTemplateMonitor(templateMonitorEntity);
     }
+
+    @RequestMapping("getMetricsUseLight")
+    @ResponseBody
+    public String getMetricsByLightType(String lightTypeId) throws JsonProcessingException {
+        return mapper.writeValueAsString(service.getMetricsByLightType(lightTypeId));
+    }
 }

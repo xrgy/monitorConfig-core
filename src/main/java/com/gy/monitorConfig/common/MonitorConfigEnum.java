@@ -19,5 +19,30 @@ public interface MonitorConfigEnum {
             return this.value;
         }
     }
+    enum VelocityEnum{
+        SERVERITY("severity"),
+        MONITOR_ID("monitorId"),
+        FIRST_CONDITION("firstCondition"),
+        FIRST_THRESHOLD("firstThreshold"),
+        EXPRESSION_MORE("expressionMore"),
+        SECOND_CONDITION("secondCondition"),
+        SECOND_THRESHOLD("secondThreshold"),
+        RULE_NAME("rulename"),
+        DESCRIPTION("description"),
+        UNIT("unit"),
+        EXPRESSION("expression"),
+        CONDITION("condition");
+        private String value;
+
+        VelocityEnum(String msg) {
+            this.value = msg;
+        }
+
+        public String value() {
+            return this.value;
+        }
+    }
+
+
 
 }
