@@ -7,6 +7,7 @@ import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
 import com.gy.monitorConfig.service.MonitorConfigService;
+import com.gy.monitorConfig.util.MapObjectUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
@@ -139,5 +141,13 @@ public class MonitorConfigController {
     @ResponseBody
     public String getMetricsByLightType(String lightTypeId) throws JsonProcessingException {
         return mapper.writeValueAsString(service.getMetricsByLightType(lightTypeId));
+    }
+
+    @RequestMapping("addAlertTemplateToEtcd")
+    @ResponseBody
+    public String addAlertTemplateToEtcd(@RequestBody Map<String,Object> map) throws IOException {
+        RuleMonitorEntity entity = mapper.readValue((String) map.get("ruleMonitorEntity"),RuleMonitorEntity.class);
+        service.addAlertTemplateToEtcd((String) map.get("lightTypeId"),(String) map.get("templateId"), entity);
+        return "";
     }
 }

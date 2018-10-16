@@ -167,6 +167,7 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
     public boolean addAvlRuleMonitor(AlertAvlRuleMonitorEntity x) {
         try {
             em.merge(x);
@@ -177,6 +178,7 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
     public boolean addPerfRuleMonitor(AlertPerfRuleMonitorEntity x) {
         try {
             em.merge(x);
@@ -187,6 +189,7 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
     public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
         try {
             em.merge(templateMonitorEntity);

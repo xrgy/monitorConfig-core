@@ -16,7 +16,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
@@ -38,7 +37,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
     @Autowired
     ObjectMapper objectMapper;
-    private static final String ALERT_RULE_TEMPLATE_PATH = "/template/alert_rule";
+    private static final String ALERT_RULE_TEMPLATE_PATH = "/template/";
     private static final String LEVEL_ONE = "one";
     private static final String LEVEL_TWO = "two";
     private static final String ONE_LEVEL_PERF = "one_level_perf";
@@ -58,8 +57,9 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return CompletableFuture.supplyAsync(() -> {
             final StringWriter sw = new StringWriter();
             try {
-                final String loadPath = this.getClass().getResource("/").getPath();
-                final String vmFilePath = loadPath + ALERT_RULE_TEMPLATE_PATH;
+                final String loadPath = this.getClass().getResource("/").getPath().replaceAll("/C:/","C:/").replaceAll("/classes/","/resources/");
+                final String loadPath2 = loadPath.substring(0,loadPath.length()-1);
+                final String vmFilePath = loadPath2 + ALERT_RULE_TEMPLATE_PATH;
                 final VelocityEngine ve = new VelocityEngine();
                 ve.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH, vmFilePath);
                 ve.setProperty("directive.set.null.allowed", true);
@@ -103,7 +103,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                     if (!("".equals(perfRule.getFirstThreshold()))) {
                         //组装性能二级告警
                         Optional<AlertPerfRuleEntity> onelevel = perfRuleList.stream().
-                                filter(perf -> perf.getUuid() != perfRule.getUuid() && perf.getMetricUuid() == perfRule.getMetricUuid()).findFirst();
+                                filter(perf -> !(perf.getUuid().equals(perfRule.getUuid())) && perf.getMetricUuid().equals(perfRule.getMetricUuid())).findFirst();
                         if (onelevel.isPresent()) {
                             ruleEntity = convertMonitorPerf2IssuePerf(perfRule, perRuleMonitor, 2, onelevel.get().getFirstThreshold(), onelevel.get().getAlertFirstCondition());
                         }
@@ -119,7 +119,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 perfParams.add(convertToPerfEtcdParamList(ruleEntity));
             }
         });
-        initAlertRule(CONFIG_TEMPLATE_PERF_ANME,perfParams);
+        CompletionStage<String> perfStr = initAlertRule(CONFIG_TEMPLATE_PERF_ANME,perfParams);
 
         //组装可用性
         List<Map<String, Object>> avlParams = new ArrayList<>();
@@ -142,13 +142,18 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             }
 
         });
-        initAlertRule(CONFIG_TEMPLATE_AVL_ANME,avlParams);
+        CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME,avlParams);
+
+        perfStr.thenCombine(avlStr,(perf,avl)->{
+            // TODO: 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
+            return null;
+        });
     }
 
     private IssueAvlMonitorRuleEntity convertMonitorPerf2IssueAvl(AlertAvlRuleEntity avlRuleEntity, AlertAvlRuleMonitorEntity avlMonitor) {
         IssueAvlMonitorRuleEntity avlMonitorRuleEntity = new IssueAvlMonitorRuleEntity();
-        avlMonitorRuleEntity.setRuleName(avlMonitorRuleEntity.getRuleName());
-        avlMonitorRuleEntity.setMonitorUuid(avlMonitorRuleEntity.getMonitorUuid());
+        avlMonitorRuleEntity.setRuleName(avlMonitor.getAlertRuleName());
+        avlMonitorRuleEntity.setMonitorUuid(avlMonitor.getMonitorUuid());
         avlMonitorRuleEntity.setSeverity(convertServerityDB(avlRuleEntity.getSeverity()));
         avlMonitorRuleEntity.setDescription(avlRuleEntity.getDescription());
         return avlMonitorRuleEntity;
