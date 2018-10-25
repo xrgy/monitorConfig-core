@@ -86,12 +86,16 @@ public interface MonitorConfigDao {
     /**
      * 根据三级规格和监控模式获取监控模板
      * @param lightType
-     * @param monitorMode
      * @return
      */
-    public List<AlertRuleTemplateEntity> getTemplateByLightType(String lightType, String monitorMode);
+    public List<AlertRuleTemplateEntity> getTemplateByLightType(String lightType);
 
-
+    /**
+     * 通过模板id获取模板实体
+     * @param uuid
+     * @return
+     */
+    public AlertRuleTemplateEntity getTemplateByUuid(String uuid);
     /**
      * 根据模板id获取可用性规则
      * @param templateId
@@ -131,4 +135,84 @@ public interface MonitorConfigDao {
      * @return
      */
     List<Metrics> getMetricsByLightType(String lightTypeId);
+
+    /**
+     * 删除模板监控实体
+     * @param uuid
+     * @return
+     */
+    boolean delTemplateMonitorByMonitorUuid(String uuid);
+
+    /**
+     * 删除可用性监控实体
+     * @param uuid
+     * @return
+     */
+    boolean delAvlMonitorByMonitorUuid(String uuid);
+
+    /**
+     * 删除性能监控实体
+     * @param uuid
+     * @return
+     */
+    boolean delPerfMonitorByMonitorUuid(String uuid);
+
+
+    /**
+     * 根据monitoruuid获取模板监控实体
+     * @param uuid
+     * @return
+     */
+    AlertRuleTemplateMonitorEntity getTemplateMonitorByMonitorUuid(String uuid);
+
+    /**
+     * 删除监控模板实体
+     * @param uuid
+     * @return
+     */
+    boolean delTemplateByTemplateUuid(String uuid);
+
+
+    /**
+     * 删除可用性模板
+     * @param uuid
+     * @return
+     */
+    boolean delAvlByTemplateUuid(String uuid);
+
+    /**
+     * 删除性能模板
+     * @param uuid
+     * @return
+     */
+    boolean delPerfByTemplateUuid(String uuid);
+
+
+    /**
+     * 根据指标id获取指标信息
+     * @param uuid
+     * @return
+     */
+    Metrics getMetricsByUuid(String uuid);
+
+    /**
+     * 通过templateid获取监控模板实体
+     * @param uuid
+     * @return
+     */
+    List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid);
+
+    /**
+     * 通过monitorid获取可用性监控实体列表
+     * @param monitorId
+     * @return
+     */
+    List<AlertAvlRuleMonitorEntity> getAvlRuleMonitorByMonitorId(String monitorId);
+
+    /**
+     * 通过monitorid获取性能监控实体列表
+     * @param monitorId
+     * @return
+     */
+    List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId);
 }

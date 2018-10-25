@@ -5,6 +5,7 @@ import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.Metrics;
 import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
+import com.gy.monitorConfig.entity.metric.UpTemplateView;
 
 import java.util.List;
 import java.util.Map;
@@ -58,12 +59,11 @@ public interface MonitorConfigService {
 
 
     /**
-     * 根据三级规格和监控模式获取监控模板列表
+     * 根据三级规格获取监控模板列表
      * @param lightType
-     * @param monitorMode
      * @return
      */
-    public String getTemplateByLightType(String lightType, String monitorMode) throws JsonProcessingException;
+    public String getTemplateByLightType(String lightType) throws JsonProcessingException;
 
     /**
      * 根据模板id获取可用性规则
@@ -115,4 +115,30 @@ public interface MonitorConfigService {
      * @param ruleMonitorEntity
      */
     void addAlertTemplateToEtcd(String lightTypeId, String templateId, RuleMonitorEntity ruleMonitorEntity);
+
+    /**
+     * 删除告警规则监控模板
+     * @param uuid
+     */
+    void delAlertMonitorRule(String uuid);
+
+    /**
+     * 删除监控模板
+     * @param id
+     */
+    void detTemplate(String id);
+
+    /**
+     * 修改监控模板
+     * @param view
+     * @return
+     */
+    boolean updateTemplate(UpTemplateView view);
+
+    /**
+     *修改打开某个监控模板(模板id)，返回
+     * @param uuid
+     * @return
+     */
+    UpTemplateView getOpenTemplateData(String uuid);
 }

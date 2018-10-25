@@ -3,6 +3,7 @@ package com.gy.monitorConfig.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.common.MonitorConfigEnum;
+import com.gy.monitorConfig.common.MonitorEnum;
 import com.gy.monitorConfig.dao.MonitorConfigDao;
 import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.*;
@@ -15,6 +16,8 @@ import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.ls.LSInput;
+import sun.security.timestamp.TSRequest;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -42,10 +45,10 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     private static final String LEVEL_TWO = "two";
     private static final String ONE_LEVEL_PERF = "one_level_perf";
     private static final String TWO_LEVEL_PERF = "two_level_perf";
-    private static final String CONFIG_TEMPLATE_PERF_ANME="perf";
-    private static final String CONFIG_TEMPLATE_AVL_ANME="avl";
-    private static final String MONITOR_STATUS="monitorstatus";
-
+    private static final String CONFIG_TEMPLATE_PERF_ANME = "perf";
+    private static final String CONFIG_TEMPLATE_AVL_ANME = "avl";
+    private static final String MONITOR_STATUS = "monitorstatus";
+    private static final String RULE_ANME_START="rule";
 
     @Override
     public TestEntity getJPAInfo() {
@@ -57,8 +60,8 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return CompletableFuture.supplyAsync(() -> {
             final StringWriter sw = new StringWriter();
             try {
-                final String loadPath = this.getClass().getResource("/").getPath().replaceAll("/C:/","C:/").replaceAll("/classes/","/resources/");
-                final String loadPath2 = loadPath.substring(0,loadPath.length()-1);
+                final String loadPath = this.getClass().getResource("/").getPath().replaceAll("/C:/", "C:/").replaceAll("/classes/", "/resources/");
+                final String loadPath2 = loadPath.substring(0, loadPath.length() - 1);
                 final String vmFilePath = loadPath2 + ALERT_RULE_TEMPLATE_PATH;
                 final VelocityEngine ve = new VelocityEngine();
                 ve.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH, vmFilePath);
@@ -119,7 +122,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 perfParams.add(convertToPerfEtcdParamList(ruleEntity));
             }
         });
-        CompletionStage<String> perfStr = initAlertRule(CONFIG_TEMPLATE_PERF_ANME,perfParams);
+        CompletionStage<String> perfStr = initAlertRule(CONFIG_TEMPLATE_PERF_ANME, perfParams);
 
         //组装可用性
         List<Map<String, Object>> avlParams = new ArrayList<>();
@@ -128,26 +131,276 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         avlRuleEntityList.forEach(x -> {
             avlRuleMap.put(x.getUuid(), x);
         });
-        ruleMonitorEntity.getAvlRuleMonitorList().forEach(avlMonitor->{
+        ruleMonitorEntity.getAvlRuleMonitorList().forEach(avlMonitor -> {
             AlertAvlRuleEntity avlRuleEntity = avlRuleMap.get(avlMonitor.getAvlRuleUuid());
             if (metricsMap.containsKey(avlRuleEntity.getMetricUuid())) {
 
-                IssueAvlMonitorRuleEntity avlRuleP =convertMonitorPerf2IssueAvl(avlRuleEntity,avlMonitor);
+                IssueAvlMonitorRuleEntity avlRuleP = convertMonitorPerf2IssueAvl(avlRuleEntity, avlMonitor);
                 Metrics myMetric = metricsMap.get(avlRuleEntity.getMetricUuid());
                 avlRuleP.setExpression(convertToVelocityExpression(myMetric.getName(), avlMonitor.getMonitorUuid()));
-                if (avlRuleP.getExpression().contains(MONITOR_STATUS)){
-                    avlRuleP.setCondition(avlRuleP.getExpression().replaceFirst("(.*)monitorstatus","up"));
+                if (avlRuleP.getExpression().contains(MONITOR_STATUS)) {
+                    avlRuleP.setCondition(avlRuleP.getExpression().replaceFirst("(.*)monitorstatus", "up"));
                 }
                 avlParams.add(convertToAvlEtcdParamList(avlRuleP));
             }
 
         });
-        CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME,avlParams);
+        CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME, avlParams);
 
-        perfStr.thenCombine(avlStr,(perf,avl)->{
+        perfStr.thenCombine(avlStr, (perf, avl) -> {
             // TODO: 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
             return null;
         });
+    }
+
+    @Override
+    public void delAlertMonitorRule(String uuid) {
+        //从数据库根据monitiruuid删除 templatemonitorentity avlmonitorentity perfmonitorentity
+        AlertRuleTemplateMonitorEntity templateMonitorEntity = dao.getTemplateMonitorByMonitorUuid(uuid);
+        boolean delTemp =dao.delTemplateMonitorByMonitorUuid(uuid);
+        boolean delAvl = dao.delAvlMonitorByMonitorUuid(uuid);
+        boolean delPerf = dao.delPerfMonitorByMonitorUuid(uuid);
+        if (delTemp && delAvl && delPerf){
+            // TODO: 2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
+        }
+
+    }
+
+    @Override
+    public boolean addTemplate(NewTemplateView view) {
+        AlertRuleTemplateEntity templateEntity = new AlertRuleTemplateEntity();
+        templateEntity.setUuid(UUID.randomUUID().toString());
+        BeanUtils.copyProperties(view, templateEntity);
+        templateEntity.setCreateTime(new Date());
+        boolean isInsertTemp = dao.addTemplate(templateEntity);
+        if (isInsertTemp) {
+            view.getAvailable().forEach(resav -> {
+                resav.getData().forEach(ava -> {
+                    AlertAvlRuleEntity avlRuleEntity = new AlertAvlRuleEntity();
+                    avlRuleEntity.setUuid(UUID.randomUUID().toString());
+                    avlRuleEntity.setTemplateUuid(templateEntity.getUuid());
+                    avlRuleEntity.setMetricUuid(ava.getUuid());
+                    avlRuleEntity.setSeverity(Integer.parseInt(ava.getSeverity()));
+                    avlRuleEntity.setDescription(ava.getDescription());
+                    dao.addAvlRule(avlRuleEntity);
+                });
+            });
+            view.getPerformance().forEach(resper -> {
+                resper.getData().forEach(perf -> {
+                    if (null != perf.getLevelOneFirstThreshold()) {
+                        AlertPerfRuleEntity perfRuleEntity = setPerfInsertRule(perf,LEVEL_ONE,templateEntity.getUuid());
+                        dao.addPerfRule(perfRuleEntity);
+                    }
+                    if (null != perf.getLevelTwoFirstThreshold()) {
+                        AlertPerfRuleEntity perfRuleEntity2 = setPerfInsertRule(perf,LEVEL_TWO,templateEntity.getUuid());
+                        dao.addPerfRule(perfRuleEntity2);
+                    }
+                });
+            });
+
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void detTemplate(String id) {
+        //删除可用性
+        boolean avl = dao.delAvlByTemplateUuid(id);
+        //删除性能
+        boolean perf = dao.delPerfByTemplateUuid(id);
+        if (avl && perf) {
+            //删除alertruletemplate
+            dao.delTemplateByTemplateUuid(id);
+        }
+    }
+
+    @Override
+    public boolean updateTemplate(UpTemplateView view) {
+        AlertRuleTemplateEntity templateEntity = dao.getTemplateByUuid(view.getUuid());
+        List<AlertAvlRuleEntity> avlRuleList = dao.getAvlRuleByTemplateId(view.getUuid());
+        List<AlertPerfRuleEntity> perfRuleList = dao.getPerfRuleByTemplateId(view.getUuid());
+        List<AlertPerfRuleEntity> newPerfRule = new ArrayList<>();
+        //avl是全部加进数据库的 但是perf 不是全部都加进数据库的
+        avlRuleList.forEach(avl->{
+            Optional<UpAvaliable> avlOpt = view.getAvailable().stream()
+                    .filter(x->x.getUuid().equals(avl.getUuid())).findFirst();
+            avlOpt.ifPresent(upAvaliable -> avl.setSeverity(Integer.parseInt(upAvaliable.getSeverity())));
+        });
+
+        view.getPerformance().forEach(perf->{
+            Optional<AlertPerfRuleEntity> perfOneOpt = perfRuleList.stream()
+                    .filter(x->x.getUuid().equals(perf.getLevelOneUuid())).findFirst();
+            if (perfOneOpt.isPresent()){
+                perfOneOpt.get().setSeverity(Integer.parseInt(perf.getLevelOneSeverity()));
+                perfOneOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelOneAlertFirstCondition()));
+                perfOneOpt.get().setFirstThreshold(perf.getLevelOneFirstThreshold());
+                perfOneOpt.get().setExpressionMore(perf.getLevelOneExpressionMore());
+                perfOneOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelOneAlertSecondCondition()));
+                if (null != perf.getLevelOneSecondThreshold()) {
+                    perfOneOpt.get().setSecondThreshold(perf.getLevelOneSecondThreshold());
+                }
+            }
+            Optional<AlertPerfRuleEntity> perfTwoOpt = perfRuleList.stream()
+                    .filter(x->x.getUuid().equals(perf.getLevelTwoUuid())).findFirst();
+            if (perfTwoOpt.isPresent()){
+                perfTwoOpt.get().setSeverity(Integer.parseInt(perf.getLevelTwoSeverity()));
+                perfTwoOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelTwoAlertFirstCondition()));
+                perfTwoOpt.get().setFirstThreshold(perf.getLevelTwoFirstThreshold());
+                perfTwoOpt.get().setExpressionMore(perf.getLevelTwoExpressionMore());
+                perfTwoOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelTwoAlertSecondCondition()));
+                if (null != perf.getLevelTwoSecondThreshold()) {
+                    perfTwoOpt.get().setSecondThreshold(perf.getLevelTwoSecondThreshold());
+                }
+            }
+            if (!perfOneOpt.isPresent() && !perfTwoOpt.isPresent()){
+                //都不存在，则添加
+                if (null != perf.getLevelOneFirstThreshold()) {
+                    MetricInfo info1 = new MetricInfo();
+                    BeanUtils.copyProperties(perf,info1);
+                    AlertPerfRuleEntity a = setPerfInsertRule(info1,LEVEL_ONE,templateEntity.getUuid());
+                    newPerfRule.add(a);
+
+                }
+                if (null != perf.getLevelTwoFirstThreshold()) {
+                    MetricInfo info2 = new MetricInfo();
+                    BeanUtils.copyProperties(perf,info2);
+                    AlertPerfRuleEntity b = setPerfInsertRule(info2,LEVEL_TWO,templateEntity.getUuid());
+                    newPerfRule.add(b);
+                }
+            }
+        });
+        perfRuleList.addAll(newPerfRule);
+        templateEntity.setMonitorMode(view.getMonitorMode());
+        templateEntity.setTemplateName(view.getTemplateName());
+        avlRuleList.forEach(x->{
+            dao.addAvlRule(x);
+        });
+        perfRuleList.forEach(x->{
+            dao.addPerfRule(x);
+        });
+
+        boolean addTem = dao.addTemplate(templateEntity);
+        if (addTem){
+            //  更新使用该监控模板的具体监控对象策略
+            List<AlertRuleTemplateMonitorEntity> templateMonitorEntity = dao.getTemplateMonitorByTemplateUuid(templateEntity.getUuid());
+            List<String> monitorIdList = new ArrayList<>();
+            templateMonitorEntity.forEach(x -> {
+                monitorIdList.add(x.getMonitorUuid());
+
+            });
+            monitorIdList.forEach(monitorId->{
+                List<AlertAvlRuleMonitorEntity> avlMonitorList = dao.getAvlRuleMonitorByMonitorId(monitorId);
+                List<AlertPerfRuleMonitorEntity> perfMonitorList = dao.getPerfRuleMonitorByMonitorId(monitorId);
+                //  找出新添加perfmonitor
+                List<AlertPerfRuleMonitorEntity> newPerfMonitor = new ArrayList<>();
+                newPerfRule.forEach(newPerf->{
+                    AlertPerfRuleMonitorEntity entity = new AlertPerfRuleMonitorEntity();
+                    String id = UUID.randomUUID().toString();
+                    entity.setUuid(id);
+                    entity.setMonitorUuid(monitorId);
+                    entity.setPerfRuleUuid(newPerf.getUuid());
+                    if (newPerf.getAlertLevel().equals(LEVEL_ONE)){
+                        entity.setAlertRuleName(RULE_ANME_START+id+ONE_LEVEL_PERF);
+                    }else if(newPerf.getAlertLevel().equals(LEVEL_TWO)){
+                        entity.setAlertRuleName(RULE_ANME_START+id+TWO_LEVEL_PERF);
+                    }
+                    newPerfMonitor.add(entity);
+                });
+                boolean addPerf = addPerfRuleMonitorList(newPerfMonitor);
+                if (addPerf){
+                    perfMonitorList.addAll(newPerfMonitor);
+                    //合成ru
+                    RuleMonitorEntity ruleMonitorEntity = new RuleMonitorEntity();
+                    ruleMonitorEntity.setAvlRuleMonitorList(avlMonitorList);
+                    ruleMonitorEntity.setPerfRuleMonitorList(perfMonitorList);
+                    ruleMonitorEntity.setTemplateMonitorEntity(templateMonitorEntity.stream().filter(x->x.getMonitorUuid().equals(monitorId)).findFirst().get());
+                    addAlertTemplateToEtcd(view.getResourceUuid(),view.getUuid(),ruleMonitorEntity);
+                }
+            });
+        }
+        return addTem;
+    }
+
+    private AlertPerfRuleEntity setPerfInsertRule(MetricInfo perf, String level, String templateId) {
+        AlertPerfRuleEntity perfRuleEntity = new AlertPerfRuleEntity();
+        perfRuleEntity.setUuid(UUID.randomUUID().toString());
+        perfRuleEntity.setTemplateUuid(templateId);
+        perfRuleEntity.setMetricUuid(perf.getUuid());
+        BeanUtils.copyProperties(convert2CommonRule(perf, level), perfRuleEntity);
+        perfRuleEntity.setAlertLevel(level);
+        perfRuleEntity.setDescription(perf.getDescription());
+        return perfRuleEntity;
+
+    }
+
+    @Override
+    public UpTemplateView getOpenTemplateData(String uuid) {
+        List<MetricsCollection> collectionList = dao.getMetricsCollection();
+        List<MetricsGroup> groupList = dao.getMetricsGroup();
+        List<MetricsType> typeList = dao.getMetricsType();
+
+        AlertRuleTemplateEntity templateEntity = dao.getTemplateByUuid(uuid);
+        List<AlertAvlRuleEntity> avlRuleList = dao.getAvlRuleByTemplateId(uuid);
+        List<AlertPerfRuleEntity> perfRuleList = dao.getPerfRuleByTemplateId(uuid);
+        UpTemplateView view = new UpTemplateView();
+        BeanUtils.copyProperties(templateEntity,view);
+        List<UpAvaliable> avaliableList = new ArrayList<>();
+        avlRuleList.forEach(avl->{
+            UpAvaliable avaliable = new UpAvaliable();
+            BeanUtils.copyProperties(avl,avaliable);
+            Metrics metrics = dao.getMetricsByUuid(avl.getMetricUuid());
+            MetricInfo metricInfo = new MetricInfo();
+            BeanUtils.copyProperties(metrics,metricInfo);
+            Optional<MetricsCollection> collection = collectionList.stream().filter(x->x.getUuid().equals(metrics.getMetricCollectionId())).findFirst();
+            collection.ifPresent(metricsCollection -> metricInfo.setCollectionName(metricsCollection.getName()));
+            Optional<MetricsGroup> group = groupList.stream().filter(x->x.getUuid().equals(metrics.getMetricGroupId())).findFirst();
+            group.ifPresent(metricsGroup -> metricInfo.setGroupName(metricsGroup.getName()));
+            Optional<MetricsType> type = typeList.stream().filter(x->x.getUuid().equals(metrics.getMetricTypeId())).findFirst();
+            type.ifPresent(metricsType -> metricInfo.setTypeName(metricsType.getName()));
+            avaliable.setQuotaInfo(metricInfo);
+            avaliableList.add(avaliable);
+        });
+        view.setAvailable(avaliableList);
+        Map<String,UpPerformance> mapp = new HashMap<>();
+        perfRuleList.forEach(perf->{
+            UpPerformance performance = null;
+            if (mapp.containsKey(perf.getMetricUuid())){
+                performance = mapp.get(perf.getMetricUuid());
+            }else {
+                performance = new UpPerformance();
+                BeanUtils.copyProperties(perf,performance);
+                Metrics metrics = dao.getMetricsByUuid(perf.getMetricUuid());
+                MetricInfo metricInfo = new MetricInfo();
+                BeanUtils.copyProperties(metrics,metricInfo);
+                Optional<MetricsCollection> collection = collectionList.stream().filter(x->x.getUuid().equals(metrics.getMetricCollectionId())).findFirst();
+                collection.ifPresent(metricsCollection -> metricInfo.setCollectionName(metricsCollection.getName()));
+                Optional<MetricsGroup> group = groupList.stream().filter(x->x.getUuid().equals(metrics.getMetricGroupId())).findFirst();
+                group.ifPresent(metricsGroup -> metricInfo.setGroupName(metricsGroup.getName()));
+                Optional<MetricsType> type = typeList.stream().filter(x->x.getUuid().equals(metrics.getMetricTypeId())).findFirst();
+                type.ifPresent(metricsType -> metricInfo.setTypeName(metricsType.getName()));
+                performance.setQuotaInfo(metricInfo);
+                mapp.put(perf.getMetricUuid(),performance);
+            }
+            if (perf.getAlertLevel().equals(LEVEL_ONE)){
+                performance.setLevelOneUuid(perf.getUuid());
+                performance.setLevelOneSeverity(perf.getSeverity()+"");
+                performance.setLevelOneAlertFirstCondition(perf.getAlertFirstCondition()+"");
+                performance.setLevelOneFirstThreshold(perf.getFirstThreshold());
+                performance.setLevelOneExpressionMore(perf.getExpressionMore());
+                performance.setLevelOneAlertSecondCondition(perf.getAlertSecondCondition()+"");
+                performance.setLevelOneSecondThreshold(perf.getSecondThreshold());
+            }else if(perf.getAlertLevel().equals(LEVEL_TWO)) {
+                performance.setLevelTwoUuid(perf.getUuid());
+                performance.setLevelTwoSeverity(perf.getSeverity()+"");
+                performance.setLevelTwoAlertFirstCondition(perf.getAlertFirstCondition()+"");
+                performance.setLevelTwoFirstThreshold(perf.getFirstThreshold());
+                performance.setLevelTwoExpressionMore(perf.getExpressionMore());
+                performance.setLevelTwoAlertSecondCondition(perf.getAlertSecondCondition()+"");
+                performance.setLevelTwoSecondThreshold(perf.getSecondThreshold());
+            }
+        });
+        return view;
     }
 
     private IssueAvlMonitorRuleEntity convertMonitorPerf2IssueAvl(AlertAvlRuleEntity avlRuleEntity, AlertAvlRuleMonitorEntity avlMonitor) {
@@ -158,7 +411,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         avlMonitorRuleEntity.setDescription(avlRuleEntity.getDescription());
         return avlMonitorRuleEntity;
     }
-    
+
     private Map<String, Object> convertToAvlEtcdParamList(IssueAvlMonitorRuleEntity ruleEntity) {
         Map<String, Object> param = new HashMap<>();
         param.put(MonitorConfigEnum.VelocityEnum.SERVERITY.value(), ruleEntity.getSeverity());
@@ -166,12 +419,12 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         param.put(MonitorConfigEnum.VelocityEnum.MONITOR_ID.value(), ruleEntity.getMonitorUuid());
         param.put(MonitorConfigEnum.VelocityEnum.DESCRIPTION.value(), ruleEntity.getDescription());
         param.put(MonitorConfigEnum.VelocityEnum.RULE_NAME.value(), ruleEntity.getRuleName());
-        if (null!=ruleEntity.getCondition()){
+        if (null != ruleEntity.getCondition()) {
             param.put(MonitorConfigEnum.VelocityEnum.CONDITION.value(), ruleEntity.getRuleName());
         }
         return param;
     }
-    
+
     private Map<String, Object> convertToPerfEtcdParamList(IssuePerfMonitorRuleEntity ruleEntity) {
         Map<String, Object> param = new HashMap<>();
         param.put(MonitorConfigEnum.VelocityEnum.SERVERITY.value(), ruleEntity.getSeverity());
@@ -358,60 +611,93 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     }
 
     @Override
-    public boolean addTemplate(NewTemplateView view) {
-        AlertRuleTemplateEntity templateEntity = new AlertRuleTemplateEntity();
-        templateEntity.setUuid(UUID.randomUUID().toString());
-        BeanUtils.copyProperties(view, templateEntity);
-        templateEntity.setCreateTime(new Date());
-        boolean isInsertTemp = dao.addTemplate(templateEntity);
-        if (isInsertTemp) {
-            view.getAvailable().forEach(resav -> {
-                resav.getData().forEach(ava -> {
-                    AlertAvlRuleEntity avlRuleEntity = new AlertAvlRuleEntity();
-                    avlRuleEntity.setUuid(UUID.randomUUID().toString());
-                    avlRuleEntity.setTemplateUuid(templateEntity.getUuid());
-                    avlRuleEntity.setMetricUuid(ava.getUuid());
-                    avlRuleEntity.setSeverity(Integer.parseInt(ava.getSeverity()));
-                    avlRuleEntity.setDescription(ava.getDescription());
-                    dao.addAvlRule(avlRuleEntity);
-                });
+    public String getTemplateByLightType(String lightType) throws JsonProcessingException {
+        MonitorTemplate monitorTemplate = new MonitorTemplate();
+        List<LightTypeEntity> lightTypeList = monitorService.getLightTypeEntity();
+        Optional<LightTypeEntity> mainLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(lightType)).findFirst();
+        List<AlertRuleTemplateEntity> mainRuleList = mainLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+        if (lightType.equals(MonitorEnum.LightTypeEnum.SWITCH.value()) || lightType.equals(MonitorEnum.LightTypeEnum.ROUTER.value())
+                || lightType.equals(MonitorEnum.LightTypeEnum.FIREWALL.value()) || lightType.equals(MonitorEnum.LightTypeEnum.LB.value())) {
+            //网络设备 monitormode需要分snmp_v1,snmp_v2
+            List<RuleTemplate> v1templates = new ArrayList<>();
+            List<RuleTemplate> v2templates = new ArrayList<>();
+            mainRuleList.forEach(rule -> {
+                RuleTemplate v =setTemple(rule,lightType);
+                if (rule.getMonitorMode().equals("snmp_v1")) {
+                    v1templates.add(v);
+                } else if (rule.getMonitorMode().equals("snmp_v2")) {
+                    v2templates.add(v);
+                }
             });
-            view.getPerformance().forEach(resper -> {
-                resper.getData().forEach(perf -> {
-                    if (null != perf.getLevelOneFirstThreshold()) {
-                        AlertPerfRuleEntity perfRuleEntity = new AlertPerfRuleEntity();
-                        perfRuleEntity.setUuid(UUID.randomUUID().toString());
-                        perfRuleEntity.setTemplateUuid(templateEntity.getUuid());
-                        perfRuleEntity.setMetricUuid(perf.getUuid());
-                        BeanUtils.copyProperties(convert2CommonRule(perf, LEVEL_ONE), perfRuleEntity);
-                        perfRuleEntity.setAlertLevel(LEVEL_ONE);
-                        perfRuleEntity.setDescription(perf.getDescription());
-                        dao.addPerfRule(perfRuleEntity);
-                    }
-                    if (null != perf.getLevelTwoFirstThreshold()) {
-                        AlertPerfRuleEntity perfRuleEntity1 = new AlertPerfRuleEntity();
-                        perfRuleEntity1.setUuid(UUID.randomUUID().toString());
-                        perfRuleEntity1.setTemplateUuid(templateEntity.getUuid());
-                        perfRuleEntity1.setMetricUuid(perf.getUuid());
-                        BeanUtils.copyProperties(convert2CommonRule(perf, LEVEL_TWO), perfRuleEntity1);
-                        perfRuleEntity1.setAlertLevel(LEVEL_TWO);
-                        perfRuleEntity1.setDescription(perf.getDescription());
-                        dao.addPerfRule(perfRuleEntity1);
-                    }
-                });
+            monitorTemplate.setSnmp_v1(v1templates);
+            monitorTemplate.setSnmp_v2(v2templates);
+        }else if (lightType.equals(MonitorEnum.LightTypeEnum.CAS.value())){
+            List<RuleTemplate> casRule = new ArrayList<>();
+            mainRuleList.forEach(rule->{
+                casRule.add(setTemple(rule,lightType));
             });
+            monitorTemplate.setCas(casRule);
+            Optional<LightTypeEntity> casClusterLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(MonitorEnum.LightTypeEnum.CASCLUSTER.value())).findFirst();
+            List<AlertRuleTemplateEntity> casClusterRuleList = casClusterLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+            List<RuleTemplate> casClusterRule = new ArrayList<>();
+            casClusterRuleList.forEach(rule->{
+                casClusterRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setCascluster(casClusterRule);
 
-            return true;
+            Optional<LightTypeEntity> cvkLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(MonitorEnum.LightTypeEnum.CVK.value())).findFirst();
+            List<AlertRuleTemplateEntity> cvkRuleList = cvkLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+            List<RuleTemplate> cvkRule = new ArrayList<>();
+            cvkRuleList.forEach(rule->{
+                cvkRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setCvk(cvkRule);
+
+            Optional<LightTypeEntity> vmLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(MonitorEnum.LightTypeEnum.CVK.value())).findFirst();
+            List<AlertRuleTemplateEntity> vmRuleList = vmLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+            List<RuleTemplate> vmRule = new ArrayList<>();
+            vmRuleList.forEach(rule->{
+                vmRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setVirtualMachine(vmRule);
+        }else if(lightType.equals(MonitorEnum.LightTypeEnum.K8S.value())){
+            List<RuleTemplate> k8sRule = new ArrayList<>();
+            mainRuleList.forEach(rule->{
+                k8sRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setCas(k8sRule);
+
+            Optional<LightTypeEntity> k8snLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(MonitorEnum.LightTypeEnum.K8SNODE.value())).findFirst();
+            List<AlertRuleTemplateEntity> k8snRuleList = k8snLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+            List<RuleTemplate> k8snRule = new ArrayList<>();
+            k8snRuleList.forEach(rule->{
+                k8snRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setK8sn(k8snRule);
+
+            Optional<LightTypeEntity> k8scLightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(MonitorEnum.LightTypeEnum.K8SCONTAINER.value())).findFirst();
+            List<AlertRuleTemplateEntity> k8scRuleList = k8scLightTypeEntity.map(light -> dao.getTemplateByLightType(light.getUuid())).orElse(null);
+            List<RuleTemplate> k8scRule = new ArrayList<>();
+            k8snRuleList.forEach(rule->{
+                k8scRule.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setK8sc(k8scRule);
+        }else {
+            List<RuleTemplate> others = new ArrayList<>();
+            mainRuleList.forEach(rule->{
+                others.add(setTemple(rule,lightType));
+            });
+            monitorTemplate.setOther(others);
         }
-        return false;
+        return objectMapper.writeValueAsString(monitorTemplate);
     }
 
-    @Override
-    public String getTemplateByLightType(String lightType, String monitorMode) throws JsonProcessingException {
-        List<LightTypeEntity> lightTypeList = monitorService.getLightTypeEntity();
-        Optional<LightTypeEntity> lightTypeEntity = lightTypeList.stream().filter(x -> x.getName().equals(lightType)).findFirst();
-        return objectMapper.writeValueAsString(lightTypeEntity.map(lightTypeEntity1 -> dao.getTemplateByLightType(lightTypeEntity1.getUuid(), monitorMode)).orElse(null));
-
+    private RuleTemplate setTemple(AlertRuleTemplateEntity rule, String lightType) {
+        RuleTemplate t = new RuleTemplate();
+        t.setLightType(lightType);
+        t.setUuid(rule.getUuid());
+        t.setTemplateName(rule.getTemplateName());
+        return t;
     }
 
     @Override
