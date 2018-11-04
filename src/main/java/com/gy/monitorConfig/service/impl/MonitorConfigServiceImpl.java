@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.common.MonitorConfigEnum;
 import com.gy.monitorConfig.common.MonitorEnum;
+import com.gy.monitorConfig.dao.EtcdDao;
 import com.gy.monitorConfig.dao.MonitorConfigDao;
 import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.*;
@@ -37,6 +38,9 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
     @Autowired
     MonitorService monitorService;
+
+    @Autowired
+    EtcdDao etcdDao;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -148,7 +152,13 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME, avlParams);
 
         perfStr.thenCombine(avlStr, (perf, avl) -> {
-            // TODO: 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
+            // 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
+            try {
+                etcdDao.insertEtcdAlert(ruleMonitorEntity.getTemplateMonitorEntity().getUuid(),perf+"\n"+avl);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
             return null;
         });
     }
@@ -161,9 +171,9 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         boolean delAvl = dao.delAvlMonitorByMonitorUuid(uuid);
         boolean delPerf = dao.delPerfMonitorByMonitorUuid(uuid);
         if (delTemp && delAvl && delPerf){
-            // TODO: 2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
+            //  2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
+            etcdDao.delEtcdAlert(templateMonitorEntity.getUuid());
         }
-
     }
 
     @Override
