@@ -14,7 +14,8 @@ import org.springframework.web.client.RestTemplate;
 @Repository
 public class EtcdDaoImpl implements EtcdDao {
 
-    private static final String IP="172.31.105.232";
+    private static final String IP="47.105.64.176";
+//    private static final String IP="172.31.105.232";
     private static final String ETCD_PORT="2379";
     private static final String ETCD_PREFIX="v2/keys/gy";
     private static final String ALERT_ETCD="alert";

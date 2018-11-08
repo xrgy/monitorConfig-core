@@ -22,8 +22,10 @@ import java.util.concurrent.CompletionStage;
 @Service
 public class MonitorServiceImpl implements MonitorService {
 
-    private String IP = "http://127.0.0.1";
-    private String PORT = "8084";
+//    private String IP = "http://127.0.0.1";
+//    private String PORT = "8084";
+    private String IP = "http://172.31.105.232";
+    private String PORT = "30004";
     private String PREFIX = "monitor";
     private String Light_PATH = "getLightType";
 
