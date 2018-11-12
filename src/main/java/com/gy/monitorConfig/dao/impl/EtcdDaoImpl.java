@@ -19,10 +19,12 @@ public class EtcdDaoImpl implements EtcdDao {
     private static final String ETCD_PORT="2379";
     private static final String ETCD_PREFIX="v2/keys/gy";
     private static final String ALERT_ETCD="alert";
+    private static final String HTTP="http://";
+
 
 
     private String etcdPrefix() {
-        return IP + ":" + ETCD_PORT + "/" + ETCD_PREFIX + "/";
+        return HTTP+IP + ":" + ETCD_PORT + "/" + ETCD_PREFIX + "/";
     }
 
     @Bean

@@ -52,7 +52,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     private static final String CONFIG_TEMPLATE_PERF_ANME = "perf";
     private static final String CONFIG_TEMPLATE_AVL_ANME = "avl";
     private static final String MONITOR_STATUS = "monitorstatus";
-    private static final String RULE_ANME_START="rule";
+    private static final String RULE_ANME_START="rule_";
 
     @Override
     public TestEntity getJPAInfo() {
@@ -72,7 +72,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 ve.setProperty("directive.set.null.allowed", true);
                 ve.init();
                 final Template velocityTemplate = ve.getTemplate(configTemplateName + ".vm", "UTF-8");
-                if (null != velocityTemplate) {
+                if (null == velocityTemplate) {
                     return sw.toString();
                 }
                 final VelocityContext velocityContext = new VelocityContext();
@@ -82,7 +82,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return "";
+            return sw.toString();
         });
     }
 
@@ -154,6 +154,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         perfStr.thenCombine(avlStr, (perf, avl) -> {
             // 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
             try {
+                // TODO: 2018/11/12  明天早上先调试这个 
                 etcdDao.insertEtcdAlert(ruleMonitorEntity.getTemplateMonitorEntity().getUuid(),perf+"\n"+avl);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
@@ -430,7 +431,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         param.put(MonitorConfigEnum.VelocityEnum.DESCRIPTION.value(), ruleEntity.getDescription());
         param.put(MonitorConfigEnum.VelocityEnum.RULE_NAME.value(), ruleEntity.getRuleName());
         if (null != ruleEntity.getCondition()) {
-            param.put(MonitorConfigEnum.VelocityEnum.CONDITION.value(), ruleEntity.getRuleName());
+            param.put(MonitorConfigEnum.VelocityEnum.CONDITION.value(), ruleEntity.getCondition());
         }
         return param;
     }
@@ -476,7 +477,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             issuePerfMonitorRuleEntity.setFirstCondition(convertConditionDB(alertPerfRuleEntity.getAlertFirstCondition()));
             issuePerfMonitorRuleEntity.setFirstThreshold(alertPerfRuleEntity.getFirstThreshold());
             issuePerfMonitorRuleEntity.setRuleName(alertPerfRuleMonitorEntity.getAlertRuleName());
-            if (!("".equals(alertPerfRuleEntity.getSecondThreshold()))) {
+            if ( null!= alertPerfRuleEntity.getSecondThreshold() && !("".equals(alertPerfRuleEntity.getSecondThreshold()))) {
                 issuePerfMonitorRuleEntity.setMoreExpression(alertPerfRuleEntity.getExpressionMore());
                 issuePerfMonitorRuleEntity.setSecondCondition(convertConditionDB(alertPerfRuleEntity.getAlertSecondCondition()));
                 issuePerfMonitorRuleEntity.setSecondThreshold(alertPerfRuleEntity.getSecondThreshold());
