@@ -7,6 +7,9 @@ import com.gy.monitorConfig.common.MonitorEnum;
 import com.gy.monitorConfig.dao.EtcdDao;
 import com.gy.monitorConfig.dao.MonitorConfigDao;
 import com.gy.monitorConfig.entity.*;
+import com.gy.monitorConfig.entity.etcd.Rule;
+import com.gy.monitorConfig.entity.etcd.RuleGroup;
+import com.gy.monitorConfig.entity.etcd.RuleGroups;
 import com.gy.monitorConfig.entity.metric.*;
 import com.gy.monitorConfig.entity.monitor.LightTypeEntity;
 import com.gy.monitorConfig.service.MonitorConfigService;
@@ -22,6 +25,7 @@ import sun.security.timestamp.TSRequest;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.acl.Group;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -64,9 +68,9 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return CompletableFuture.supplyAsync(() -> {
             final StringWriter sw = new StringWriter();
             try {
-                final String loadPath = this.getClass().getResource("/").getPath().replaceAll("/C:/", "C:/").replaceAll("/classes/", "/resources/");
-                final String loadPath2 = loadPath.substring(0, loadPath.length() - 1);
-                final String vmFilePath = loadPath2 + ALERT_RULE_TEMPLATE_PATH;
+//                final String loadPath = this.getClass().getResource("/").getPath();
+                final String vmFilePath = ALERT_RULE_TEMPLATE_PATH;
+                System.out.println(vmFilePath);
                 final VelocityEngine ve = new VelocityEngine();
                 ve.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH, vmFilePath);
                 ve.setProperty("directive.set.null.allowed", true);
@@ -97,7 +101,11 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         //通过templateId获取性能模板
         List<AlertPerfRuleEntity> perfRuleList = dao.getPerfRuleByTemplateId(templateId);
         Map<String, AlertPerfRuleEntity> perfRuleMap = new HashMap<>();
-        List<Map<String, Object>> perfParams = new ArrayList<>();
+        //List<Map<String, Object>> perfParams = new ArrayList<>();
+        RuleGroups groups = new RuleGroups();
+        RuleGroup group = new RuleGroup();
+        group.setName("/"+ruleMonitorEntity.getTemplateMonitorEntity().getUuid()+".rules");
+        List<Rule> rules =new ArrayList<>();
         perfRuleList.forEach(x -> {
             perfRuleMap.put(x.getUuid(), x);
         });
@@ -123,10 +131,11 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 Metrics myMetric = metricsMap.get(perfRule.getMetricUuid());
                 ruleEntity.setUnit(myMetric.getMetricDisplayUnit());
                 ruleEntity.setExpression(convertToVelocityExpression(myMetric.getName(), perRuleMonitor.getMonitorUuid()));
-                perfParams.add(convertToPerfEtcdParamList(ruleEntity));
+                rules.add(convertPerfToRuleYaml(ruleEntity));
+                //perfParams.add(convertToPerfEtcdParamList(ruleEntity));
             }
         });
-        CompletionStage<String> perfStr = initAlertRule(CONFIG_TEMPLATE_PERF_ANME, perfParams);
+        //CompletionStage<String> perfStr = initAlertRule(CONFIG_TEMPLATE_PERF_ANME, perfParams);
 
         //组装可用性
         List<Map<String, Object>> avlParams = new ArrayList<>();
@@ -145,23 +154,32 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 if (avlRuleP.getExpression().contains(MONITOR_STATUS)) {
                     avlRuleP.setCondition(avlRuleP.getExpression().replaceFirst("(.*)monitorstatus", "up"));
                 }
-                avlParams.add(convertToAvlEtcdParamList(avlRuleP));
+                //avlParams.add(convertToAvlEtcdParamList(avlRuleP));
+                rules.add(convertAvlToRuleYaml(avlRuleP));
             }
 
         });
-        CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME, avlParams);
+        //CompletionStage<String> avlStr = initAlertRule(CONFIG_TEMPLATE_AVL_ANME, avlParams);
 
-        perfStr.thenCombine(avlStr, (perf, avl) -> {
+        group.setRules(rules);
+        List<RuleGroup> tempGroup = new ArrayList<>();
+        tempGroup.add(group);
+        groups.setGroups(tempGroup);
+        try {
+            etcdDao.insertEtcdAlert(ruleMonitorEntity.getTemplateMonitorEntity().getUuid(),groups);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        /*perfStr.thenCombine(avlStr, (perf, avl) -> {
             // 2018/10/16 将模板string下发到etcd模板监控实体id对应的value中，
             try {
-                // TODO: 2018/11/12  明天早上先调试这个 
                 etcdDao.insertEtcdAlert(ruleMonitorEntity.getTemplateMonitorEntity().getUuid(),perf+"\n"+avl);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
 
             return null;
-        });
+        });*/
     }
 
     @Override
@@ -307,7 +325,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 List<AlertPerfRuleMonitorEntity> newPerfMonitor = new ArrayList<>();
                 newPerfRule.forEach(newPerf->{
                     AlertPerfRuleMonitorEntity entity = new AlertPerfRuleMonitorEntity();
-                    String id = UUID.randomUUID().toString();
+                    String id = UUID.randomUUID().toString().replaceAll("-","");
                     entity.setUuid(id);
                     entity.setMonitorUuid(monitorId);
                     entity.setPerfRuleUuid(newPerf.getUuid());
@@ -423,6 +441,24 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return avlMonitorRuleEntity;
     }
 
+
+    private Rule convertAvlToRuleYaml(IssueAvlMonitorRuleEntity ruleEntity){
+        Rule rule = new Rule();
+        rule.setAlert(ruleEntity.getRuleName());
+        if (null!=ruleEntity.getCondition()){
+            String expr = ruleEntity.getCondition()+"!=1 OR "+ruleEntity.getExpression()+"!=1";
+            rule.setExpr(expr);
+        }
+        Map<String,String> labels = new HashMap<>();
+        labels.put("severity",ruleEntity.getSeverity());
+        rule.setLabels(labels);
+        Map<String,String> annotations = new HashMap<>();
+        annotations.put("description",ruleEntity.getDescription());
+        annotations.put("current_value","{{$value}}");
+        rule.setAnnotations(annotations);
+        return rule;
+    }
+
     private Map<String, Object> convertToAvlEtcdParamList(IssueAvlMonitorRuleEntity ruleEntity) {
         Map<String, Object> param = new HashMap<>();
         param.put(MonitorConfigEnum.VelocityEnum.SERVERITY.value(), ruleEntity.getSeverity());
@@ -434,6 +470,27 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             param.put(MonitorConfigEnum.VelocityEnum.CONDITION.value(), ruleEntity.getCondition());
         }
         return param;
+    }
+
+
+
+    private Rule convertPerfToRuleYaml(IssuePerfMonitorRuleEntity ruleEntity){
+        Rule rule = new Rule();
+        rule.setAlert(ruleEntity.getRuleName());
+        String expr = ruleEntity.getExpression()+" "+ruleEntity.getFirstCondition()+" "+ruleEntity.getFirstThreshold();
+        if (null!=ruleEntity.getSecondCondition() && null!=ruleEntity.getMoreExpression()){
+            expr+=" "+ruleEntity.getMoreExpression()+" "+ruleEntity.getExpression()+" "+ruleEntity.getSecondCondition()+" "+ruleEntity.getSecondThreshold();
+        }
+        rule.setExpr(expr);
+        Map<String,String> labels = new HashMap<>();
+        labels.put("severity",ruleEntity.getSeverity());
+        rule.setLabels(labels);
+        Map<String,String> annotations = new HashMap<>();
+        annotations.put("description",ruleEntity.getDescription());
+        annotations.put("threashold",ruleEntity.getFirstThreshold()+ruleEntity.getUnit());
+        annotations.put("current_value","{{$value}}"+ruleEntity.getUnit());
+        rule.setAnnotations(annotations);
+        return rule;
     }
 
     private Map<String, Object> convertToPerfEtcdParamList(IssuePerfMonitorRuleEntity ruleEntity) {

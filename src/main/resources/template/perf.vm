@@ -21,7 +21,7 @@ LABELS {severity="${severity}"}
 ANNOTATIONS{
 description="${description}",
 summary="${summary}",
-threashold="${firstThreashold}${unit}"
+threashold="${firstThreashold}${unit}",
 current_value="{{$value}}${unit}"
 }
 #end
