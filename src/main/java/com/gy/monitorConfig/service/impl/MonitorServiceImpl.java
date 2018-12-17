@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.entity.monitor.LightTypeEntity;
 import com.gy.monitorConfig.service.MonitorService;
+import com.gy.monitorConfig.util.EtcdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +23,16 @@ import java.util.concurrent.CompletionStage;
 @Service
 public class MonitorServiceImpl implements MonitorService {
 
-//    private String IP = "http://127.0.0.1";
+//    private String ip = "http://127.0.0.1";
 
-    private String IP = "http://172.17.5.135";
+//    private String IP = "http://172.17.5.135";
 
 //    private String IP = "http://172.31.105.232";
-    private String PORT = "30004";
+    private String PORT = "8084";
+//    private String PORT = "30004";
     private String PREFIX = "monitor";
     private String Light_PATH = "getLightType";
+    private static final String HTTP="http://";
 
     @Autowired
     ObjectMapper mapper;
@@ -41,7 +44,13 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     private String monitorPrefix(){
-        return IP+":"+PORT+"/"+PREFIX+"/";
+        String ip = "";
+        try {
+            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return HTTP+ip+":"+PORT+"/"+PREFIX+"/";
     }
 
 

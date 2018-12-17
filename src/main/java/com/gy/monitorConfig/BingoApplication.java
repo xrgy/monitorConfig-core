@@ -1,6 +1,7 @@
 package com.gy.monitorConfig;
 
 import com.gy.monitorConfig.base.BaseRepositoryFactoryBean;
+import com.gy.monitorConfig.util.ProperUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -14,6 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(repositoryFactoryBeanClass = BaseRepositoryFactoryBean.class)
 public class BingoApplication {
     public static void main(String[] args){
+        ProperUtil.SetConfInfo();
         SpringApplication.run(BingoApplication.class,args);
     }
 }

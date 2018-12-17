@@ -524,7 +524,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             issuePerfMonitorRuleEntity.setFirstCondition(convertConditionDB(alertPerfRuleEntity.getAlertFirstCondition()));
             issuePerfMonitorRuleEntity.setFirstThreshold(alertPerfRuleEntity.getFirstThreshold());
             issuePerfMonitorRuleEntity.setRuleName(alertPerfRuleMonitorEntity.getAlertRuleName());
-            if (!("".equals(alertPerfRuleEntity.getSecondThreshold()))) {
+            if (null!=alertPerfRuleEntity.getSecondThreshold() && !("".equals(alertPerfRuleEntity.getSecondThreshold()))) {
                 issuePerfMonitorRuleEntity.setMoreExpression(alertPerfRuleEntity.getExpressionMore());
                 issuePerfMonitorRuleEntity.setSecondCondition(convertConditionDB(alertPerfRuleEntity.getAlertSecondCondition()));
                 issuePerfMonitorRuleEntity.setSecondThreshold(alertPerfRuleEntity.getSecondThreshold());
