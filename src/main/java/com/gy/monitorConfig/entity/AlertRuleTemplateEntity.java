@@ -19,8 +19,8 @@ public class AlertRuleTemplateEntity {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "resource_uuid")
-    private String resourceUuid;
+    @Column(name = "light_type")
+    private String lightType;
 
     @Column(name = "template_name")
     private String templateName;

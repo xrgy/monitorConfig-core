@@ -28,23 +28,23 @@ public interface MonitorConfigDao {
      */
     public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name);
 
-    /**
-     * 获取指标全部收集方式
-     * @return
-     */
-    public List<MetricsCollection> getMetricsCollection();
-
-    /**
-     * 获取指标全部分组
-     * @return
-     */
-    public List<MetricsGroup> getMetricsGroup();
-
-    /**
-     * 获取指标全部类型
-     * @return
-     */
-    public List<MetricsType> getMetricsType();
+//    /**
+//     * 获取指标全部收集方式
+//     * @return
+//     */
+//    public List<MetricsCollection> getMetricsCollection();
+//
+//    /**
+//     * 获取指标全部分组
+//     * @return
+//     */
+//    public List<MetricsGroup> getMetricsGroup();
+//
+//    /**
+//     * 获取指标全部类型
+//     * @return
+//     */
+//    public List<MetricsType> getMetricsType();
 
     /**
      * 通过三级规格id和监控方式获取指标

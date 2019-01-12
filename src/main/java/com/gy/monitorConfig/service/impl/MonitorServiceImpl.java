@@ -45,24 +45,25 @@ public class MonitorServiceImpl implements MonitorService {
 
     private String monitorPrefix(){
         String ip = "";
-        try {
-            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+            ip="127.0.0.1";
+//            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         return HTTP+ip+":"+PORT+"/"+PREFIX+"/";
     }
 
-
-    @Override
-    public List<LightTypeEntity> getLightTypeEntity() {
-        ResponseEntity<String> response = rest().getForEntity(monitorPrefix()+Light_PATH,String.class);
-        try {
-            return mapper.readValue(response.getBody(),new TypeReference<List<LightTypeEntity>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    };
+//
+//    @Override
+//    public List<LightTypeEntity> getLightTypeEntity() {
+//        ResponseEntity<String> response = rest().getForEntity(monitorPrefix()+Light_PATH,String.class);
+//        try {
+//            return mapper.readValue(response.getBody(),new TypeReference<List<LightTypeEntity>>(){});
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    };
 
 }

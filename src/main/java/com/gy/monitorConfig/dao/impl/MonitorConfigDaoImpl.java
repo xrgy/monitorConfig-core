@@ -64,30 +64,30 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         return null;
     }
 
-    @Override
-    public List<MetricsCollection> getMetricsCollection() {
-        String sql = "From MetricsCollection";
-        return em.createQuery(sql, MetricsCollection.class)
-                .getResultList();
-    }
-
-    @Override
-    public List<MetricsGroup> getMetricsGroup() {
-        String sql = "From MetricsGroup";
-        return em.createQuery(sql, MetricsGroup.class)
-                .getResultList();
-    }
-
-    @Override
-    public List<MetricsType> getMetricsType() {
-        String sql = "From MetricsType";
-        return em.createQuery(sql, MetricsType.class)
-                .getResultList();
-    }
+//    @Override
+//    public List<MetricsCollection> getMetricsCollection() {
+//        String sql = "From MetricsCollection";
+//        return em.createQuery(sql, MetricsCollection.class)
+//                .getResultList();
+//    }
+//
+//    @Override
+//    public List<MetricsGroup> getMetricsGroup() {
+//        String sql = "From MetricsGroup";
+//        return em.createQuery(sql, MetricsGroup.class)
+//                .getResultList();
+//    }
+//
+//    @Override
+//    public List<MetricsType> getMetricsType() {
+//        String sql = "From MetricsType";
+//        return em.createQuery(sql, MetricsType.class)
+//                .getResultList();
+//    }
 
     @Override
     public List<Metrics> getMetricByTypeAndMode(String lightType, String monitorMode) {
-        String sql = "From Metrics Where metricLightTypeId =:lightTypeId AND metricCollectionId =:collectionId";
+        String sql = "From Metrics Where metricLightType =:lightTypeId AND metricCollection =:collectionId";
         return em.createQuery(sql, Metrics.class)
                 .setParameter("lightTypeId", lightType)
                 .setParameter("collectionId", monitorMode)
@@ -143,9 +143,9 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
 
     @Override
     public List<AlertRuleTemplateEntity> getTemplateByLightType(String lightTypeUuid) {
-        String sql = "From AlertRuleTemplateEntity Where resourceUuid =:resourceUuid";
+        String sql = "From AlertRuleTemplateEntity Where lightType =:lightType";
         return em.createQuery(sql, AlertRuleTemplateEntity.class)
-                .setParameter("resourceUuid", lightTypeUuid)
+                .setParameter("lightType", lightTypeUuid)
                 .getResultList();
     }
 
@@ -208,7 +208,7 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
 
     @Override
     public List<Metrics> getMetricsByLightType(String lightTypeId) {
-        String sql = "From Metrics where metricLightTypeId =:lightTypeId";
+        String sql = "From Metrics where metricLightType =:lightTypeId";
         return em.createQuery(sql, Metrics.class)
                 .setParameter("lightTypeId", lightTypeId)
                 .getResultList();

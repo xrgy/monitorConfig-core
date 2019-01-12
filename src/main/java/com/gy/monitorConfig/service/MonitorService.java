@@ -12,5 +12,5 @@ public interface MonitorService {
 
 
 
-    public List<LightTypeEntity> getLightTypeEntity();
+//    public List<LightTypeEntity> getLightTypeEntity();
 }
