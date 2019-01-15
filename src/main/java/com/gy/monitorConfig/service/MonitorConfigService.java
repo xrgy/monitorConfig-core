@@ -118,7 +118,7 @@ public interface MonitorConfigService {
 
     /**
      * 删除告警规则监控模板
-     * @param uuid
+     * @param uuid 这个就是monitoruuid+templateuuid 去除'-'
      */
     void delAlertMonitorRule(String uuid);
 

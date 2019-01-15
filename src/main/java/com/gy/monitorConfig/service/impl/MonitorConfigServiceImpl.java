@@ -87,8 +87,8 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     }
 
     @Override
-    public void addAlertTemplateToEtcd(String lightTypeId, String templateId, RuleMonitorEntity ruleMonitorEntity) {
-        List<Metrics> metricList = dao.getMetricsByLightType(lightTypeId);
+    public void addAlertTemplateToEtcd(String lightType, String templateId, RuleMonitorEntity ruleMonitorEntity) {
+        List<Metrics> metricList = dao.getMetricsByLightType(lightType);
         Map<String, Metrics> metricsMap = new HashMap<>();
         metricList.forEach(x -> {
             metricsMap.put(x.getUuid(), x);
@@ -180,15 +180,14 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
     @Override
     public void delAlertMonitorRule(String uuid) {
+        //todo 根据uuid从monitor获取temmplte
         //从数据库根据monitiruuid删除 templatemonitorentity avlmonitorentity perfmonitorentity
-        AlertRuleTemplateMonitorEntity templateMonitorEntity = dao.getTemplateMonitorByMonitorUuid(uuid);
-        boolean delTemp = dao.delTemplateMonitorByMonitorUuid(uuid);
-        boolean delAvl = dao.delAvlMonitorByMonitorUuid(uuid);
-        boolean delPerf = dao.delPerfMonitorByMonitorUuid(uuid);
-        if (delTemp && delAvl && delPerf) {
-            //  2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
-            etcdDao.delEtcdAlert(templateMonitorEntity.getUuid());
-        }
+//        AlertRuleTemplateMonitorEntity templateMonitorEntity = dao.getTemplateMonitorByMonitorUuid(uuid);
+//        boolean delTemp = dao.delTemplateMonitorByMonitorUuid(uuid);
+//        boolean delAvl = dao.delAvlMonitorByMonitorUuid(uuid);
+//        boolean delPerf = dao.delPerfMonitorByMonitorUuid(uuid);
+        // todo 2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
+        etcdDao.delEtcdAlert(uuid);
     }
 
     @Override
@@ -684,7 +683,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             });
             monitorTemplate.setCvk(cvkRule);
 
-            List<AlertRuleTemplateEntity> vmRuleList =  dao.getTemplateByLightType(lightType);
+            List<AlertRuleTemplateEntity> vmRuleList = dao.getTemplateByLightType(lightType);
             List<RuleTemplate> vmRule = new ArrayList<>();
             vmRuleList.forEach(rule -> {
                 vmRule.add(setTemple(rule, lightType));
