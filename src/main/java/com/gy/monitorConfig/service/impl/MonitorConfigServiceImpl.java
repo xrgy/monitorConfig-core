@@ -47,10 +47,10 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     private static final String ALERT_RULE_TEMPLATE_PATH = "/template/";
     private static final String LEVEL_ONE = "one";
     private static final String LEVEL_TWO = "two";
-    private static final String ONE_LEVEL_PERF = "one_level_perf";
-    private static final String TWO_LEVEL_PERF = "two_level_perf";
+    private static final String AVL_RULE_NAME = "_avl";
+    private static final String ONE_LEVEL_PERF = "_one_level_perf";
+    private static final String TWO_LEVEL_PERF = "_two_level_perf";
     private static final String CONFIG_TEMPLATE_PERF_ANME = "perf";
-    private static final String CONFIG_TEMPLATE_AVL_ANME = "avl";
     private static final String MONITOR_STATUS = "monitorstatus";
     private static final String RULE_ANME_START = "rule_";
 
@@ -180,13 +180,13 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
     @Override
     public void delAlertMonitorRule(String uuid) {
-        //todo 根据uuid从monitor获取temmplte
+
         //从数据库根据monitiruuid删除 templatemonitorentity avlmonitorentity perfmonitorentity
 //        AlertRuleTemplateMonitorEntity templateMonitorEntity = dao.getTemplateMonitorByMonitorUuid(uuid);
 //        boolean delTemp = dao.delTemplateMonitorByMonitorUuid(uuid);
 //        boolean delAvl = dao.delAvlMonitorByMonitorUuid(uuid);
 //        boolean delPerf = dao.delPerfMonitorByMonitorUuid(uuid);
-        // todo 2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
+        //  2018/10/22 根据templateMonitorEntity.getuuid从etcd中删除  url=”/alert/uuid” wsrequest.delete()
         etcdDao.delEtcdAlert(uuid);
     }
 
@@ -305,42 +305,88 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         });
 
         boolean addTem = dao.addTemplate(templateEntity);
-        if (addTem) {
-            //  更新使用该监控模板的具体监控对象策略
-            List<AlertRuleTemplateMonitorEntity> templateMonitorEntity = dao.getTemplateMonitorByTemplateUuid(templateEntity.getUuid());
-            List<String> monitorIdList = new ArrayList<>();
-            templateMonitorEntity.forEach(x -> {
-                monitorIdList.add(x.getMonitorUuid());
-
+        //找出使用该模板的monitor record
+        String lightType = view.getLightType();
+        List<String> monitoruuids = new ArrayList<>();
+        if (lightType.equals(MonitorEnum.LightTypeEnum.SWITCH.value()) || lightType.equals(MonitorEnum.LightTypeEnum.ROUTER.value())
+                || lightType.equals(MonitorEnum.LightTypeEnum.LB.value()) || lightType.equals(MonitorEnum.LightTypeEnum.FIREWALL.value())) {
+            monitorService.getNetworkMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
             });
-            monitorIdList.forEach(monitorId -> {
-                List<AlertAvlRuleMonitorEntity> avlMonitorList = dao.getAvlRuleMonitorByMonitorId(monitorId);
-                List<AlertPerfRuleMonitorEntity> perfMonitorList = dao.getPerfRuleMonitorByMonitorId(monitorId);
-                //  找出新添加perfmonitor
-                List<AlertPerfRuleMonitorEntity> newPerfMonitor = new ArrayList<>();
-                newPerfRule.forEach(newPerf -> {
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.MYSQL.value())) {
+            monitorService.getDbMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.TOMCAT.value())) {
+            monitorService.getTomcatRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.CAS.value())) {
+            monitorService.getCasMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.CVK.value())) {
+            monitorService.getHostMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.VIRTUALMACHINE.value())) {
+            monitorService.getVmMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.K8S.value())) {
+            monitorService.getK8sMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.K8SNODE.value())) {
+            monitorService.getK8snodeMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        } else if (lightType.equals(MonitorEnum.LightTypeEnum.K8SCONTAINER.value())) {
+            monitorService.getK8scontainerMonitorRecordByTemplateId(view.getUuid()).forEach(x -> {
+                monitoruuids.add(x.getUuid());
+            });
+        }
+
+
+        if (addTem) {
+            monitoruuids.forEach(monitorId -> {
+                List<AlertAvlRuleMonitorEntity> avlMonitorList = new ArrayList<>();
+                List<AlertPerfRuleMonitorEntity> perfMonitorList = new ArrayList<>();
+                avlRuleList.forEach(x -> {
+                    AlertAvlRuleMonitorEntity entity = new AlertAvlRuleMonitorEntity();
+                    String id = (monitorId + x.getUuid()).replaceAll("-", "");
+                    entity.setUuid(id);
+                    entity.setAlertRuleName(RULE_ANME_START + id + AVL_RULE_NAME);
+                    entity.setMonitorUuid(monitorId);
+                    entity.setAvlRuleUuid(x.getUuid());
+                    avlMonitorList.add(entity);
+                });
+
+                perfRuleList.forEach(x -> {
                     AlertPerfRuleMonitorEntity entity = new AlertPerfRuleMonitorEntity();
-                    String id = UUID.randomUUID().toString().replaceAll("-", "");
+                    String id = (monitorId + x.getUuid()).replaceAll("-", "");
                     entity.setUuid(id);
                     entity.setMonitorUuid(monitorId);
-                    entity.setPerfRuleUuid(newPerf.getUuid());
-                    if (newPerf.getAlertLevel().equals(LEVEL_ONE)) {
+                    entity.setPerfRuleUuid(x.getUuid());
+                    if (x.getAlertLevel().equals(LEVEL_ONE)) {
                         entity.setAlertRuleName(RULE_ANME_START + id + ONE_LEVEL_PERF);
-                    } else if (newPerf.getAlertLevel().equals(LEVEL_TWO)) {
+                    } else if (x.getAlertLevel().equals(LEVEL_TWO)) {
                         entity.setAlertRuleName(RULE_ANME_START + id + TWO_LEVEL_PERF);
                     }
-                    newPerfMonitor.add(entity);
+                    perfMonitorList.add(entity);
                 });
-                boolean addPerf = addPerfRuleMonitorList(newPerfMonitor);
-                if (addPerf) {
-                    perfMonitorList.addAll(newPerfMonitor);
-                    //合成ru
-                    RuleMonitorEntity ruleMonitorEntity = new RuleMonitorEntity();
-                    ruleMonitorEntity.setAvlRuleMonitorList(avlMonitorList);
-                    ruleMonitorEntity.setPerfRuleMonitorList(perfMonitorList);
-                    ruleMonitorEntity.setTemplateMonitorEntity(templateMonitorEntity.stream().filter(x -> x.getMonitorUuid().equals(monitorId)).findFirst().get());
-                    addAlertTemplateToEtcd(view.getResourceUuid(), view.getUuid(), ruleMonitorEntity);
-                }
+                AlertRuleTemplateMonitorEntity templateMonitorEntity = new AlertRuleTemplateMonitorEntity();
+                String temuuid = (monitorId + view.getUuid()).replaceAll("-", "");
+                templateMonitorEntity.setUuid(temuuid);
+                templateMonitorEntity.setMonitorUuid(monitorId);
+                templateMonitorEntity.setTemplateUuid(view.getUuid());
+
+                //合成ru
+                RuleMonitorEntity ruleMonitorEntity = new RuleMonitorEntity();
+                ruleMonitorEntity.setAvlRuleMonitorList(avlMonitorList);
+                ruleMonitorEntity.setPerfRuleMonitorList(perfMonitorList);
+                ruleMonitorEntity.setTemplateMonitorEntity(templateMonitorEntity);
+                addAlertTemplateToEtcd(view.getLightType(), view.getUuid(), ruleMonitorEntity);
             });
         }
         return addTem;
@@ -604,15 +650,15 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return res;
     }
 
-    @Override
-    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name) {
-        return dao.getAvlRuleMonitor(name);
-    }
-
-    @Override
-    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name) {
-        return dao.getPerfRuleMonitor(name);
-    }
+//    @Override
+//    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name) {
+//        return dao.getAvlRuleMonitor(name);
+//    }
+//
+//    @Override
+//    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name) {
+//        return dao.getPerfRuleMonitor(name);
+//    }
 
     @Override
     public ResMetricInfo getMetricInfo(String lightType, String monitorMode) {
@@ -737,26 +783,26 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return dao.getPerfRuleByTemplateId(templateId);
     }
 
-    @Override
-    public boolean addAvlRuleMonitorList(List<AlertAvlRuleMonitorEntity> avlRuleMonitorList) {
-        avlRuleMonitorList.forEach(x -> {
-            dao.addAvlRuleMonitor(x);
-        });
-        return true;
-    }
-
-    @Override
-    public boolean addPerfRuleMonitorList(List<AlertPerfRuleMonitorEntity> perfRuleMonitorList) {
-        perfRuleMonitorList.forEach(x -> {
-            dao.addPerfRuleMonitor(x);
-        });
-        return true;
-    }
-
-    @Override
-    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
-        return dao.addTemplateMonitor(templateMonitorEntity);
-    }
+//    @Override
+//    public boolean addAvlRuleMonitorList(List<AlertAvlRuleMonitorEntity> avlRuleMonitorList) {
+//        avlRuleMonitorList.forEach(x -> {
+//            dao.addAvlRuleMonitor(x);
+//        });
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean addPerfRuleMonitorList(List<AlertPerfRuleMonitorEntity> perfRuleMonitorList) {
+//        perfRuleMonitorList.forEach(x -> {
+//            dao.addPerfRuleMonitor(x);
+//        });
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
+//        return dao.addTemplateMonitor(templateMonitorEntity);
+//    }
 
     @Override
     public List<Metrics> getMetricsByLightType(String lightTypeId) {

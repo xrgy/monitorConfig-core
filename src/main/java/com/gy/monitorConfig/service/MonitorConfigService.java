@@ -26,14 +26,14 @@ public interface MonitorConfigService {
      * @param name
      * @return
      */
-    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name);
+//    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name);
 
     /**
      * 通过性能性告警规则名获取规则监控实体
      * @param name
      * @return
      */
-    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name);
+//    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name);
 
     /**
      * 根据三级规格和监控方式获取指标数据
@@ -84,14 +84,14 @@ public interface MonitorConfigService {
      * @param avlRuleMonitorList
      * @return
      */
-    boolean addAvlRuleMonitorList(List<AlertAvlRuleMonitorEntity> avlRuleMonitorList);
+//    boolean addAvlRuleMonitorList(List<AlertAvlRuleMonitorEntity> avlRuleMonitorList);
 
     /**
      * 持久化性能监控实体列表到数据库
      * @param perfRuleMonitorList
      * @return
      */
-    boolean addPerfRuleMonitorList(List<AlertPerfRuleMonitorEntity> perfRuleMonitorList);
+//    boolean addPerfRuleMonitorList(List<AlertPerfRuleMonitorEntity> perfRuleMonitorList);
 
     /**
      *
@@ -99,7 +99,7 @@ public interface MonitorConfigService {
      * @param templateMonitorEntity
      * @return
      */
-    boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
+//    boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
 
     /**
      * 通过三级规格获取该资源指标列表

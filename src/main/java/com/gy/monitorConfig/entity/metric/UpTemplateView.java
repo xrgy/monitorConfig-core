@@ -42,10 +42,10 @@ public class UpTemplateView {
     private int templateType;
 
     /**
-     * 资源三级规格id
+     * 资源三级规格
      */
-    @JsonProperty("resource_uuid")
-    private String resourceUuid;
+    @JsonProperty("light_type")
+    private String lightType;
 
     /**
      * 可用性数据

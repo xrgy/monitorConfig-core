@@ -1,25 +1,18 @@
 package com.gy.monitorConfig.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
 import com.gy.monitorConfig.entity.metric.UpTemplateView;
 import com.gy.monitorConfig.service.MonitorConfigService;
-import com.gy.monitorConfig.util.MapObjectUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletionStage;
 
 /**
  * Created by gy on 2018/3/31.
@@ -65,17 +58,17 @@ public class MonitorConfigController {
     }
 
 
-    @RequestMapping("avlRuleMonitor")
-    @ResponseBody
-    public String getAvlRuleMonitor(String name) throws Exception {
-        return mapper.writeValueAsString(service.getAvlRuleMonitor(name));
-    }
-
-    @RequestMapping("perfRuleMonitor")
-    @ResponseBody
-    public String getPerfRuleMonitor(String name) throws Exception {
-        return mapper.writeValueAsString(service.getPerfRuleMonitor(name));
-    }
+//    @RequestMapping("avlRuleMonitor")
+//    @ResponseBody
+//    public String getAvlRuleMonitor(String name) throws Exception {
+//        return mapper.writeValueAsString(service.getAvlRuleMonitor(name));
+//    }
+//
+//    @RequestMapping("perfRuleMonitor")
+//    @ResponseBody
+//    public String getPerfRuleMonitor(String name) throws Exception {
+//        return mapper.writeValueAsString(service.getPerfRuleMonitor(name));
+//    }
 
     @RequestMapping("getMetricInfo")
     @ResponseBody
@@ -129,28 +122,28 @@ public class MonitorConfigController {
         return mapper.writeValueAsString(service.getPerfRuleByTemplateId(templateId));
     }
 
-    @RequestMapping("addAvlRuleMonitorList")
-    @ResponseBody
-    public boolean addAvlRuleMonitorList(@RequestBody String data) throws IOException {
-        List<AlertAvlRuleMonitorEntity> avlRuleMonitorList = mapper.readValue(data, new TypeReference<List<AlertAvlRuleMonitorEntity>>() {
-        });
-        return service.addAvlRuleMonitorList(avlRuleMonitorList);
-    }
+//    @RequestMapping("addAvlRuleMonitorList")
+//    @ResponseBody
+//    public boolean addAvlRuleMonitorList(@RequestBody String data) throws IOException {
+//        List<AlertAvlRuleMonitorEntity> avlRuleMonitorList = mapper.readValue(data, new TypeReference<List<AlertAvlRuleMonitorEntity>>() {
+//        });
+//        return service.addAvlRuleMonitorList(avlRuleMonitorList);
+//    }
+//
+//    @RequestMapping("addPerfRuleMonitorList")
+//    @ResponseBody
+//    public boolean addPerfRuleMonitorList(@RequestBody String data) throws IOException {
+//        List<AlertPerfRuleMonitorEntity> perfRuleMonitorList = mapper.readValue(data, new TypeReference<List<AlertPerfRuleMonitorEntity>>() {
+//        });
+//        return service.addPerfRuleMonitorList(perfRuleMonitorList);
+//    }
 
-    @RequestMapping("addPerfRuleMonitorList")
-    @ResponseBody
-    public boolean addPerfRuleMonitorList(@RequestBody String data) throws IOException {
-        List<AlertPerfRuleMonitorEntity> perfRuleMonitorList = mapper.readValue(data, new TypeReference<List<AlertPerfRuleMonitorEntity>>() {
-        });
-        return service.addPerfRuleMonitorList(perfRuleMonitorList);
-    }
-
-    @RequestMapping("addTemplateMonitor")
-    @ResponseBody
-    public boolean addTemplateMonitor(@RequestBody String data) throws IOException {
-        AlertRuleTemplateMonitorEntity templateMonitorEntity = mapper.readValue(data, AlertRuleTemplateMonitorEntity.class);
-        return service.addTemplateMonitor(templateMonitorEntity);
-    }
+//    @RequestMapping("addTemplateMonitor")
+//    @ResponseBody
+//    public boolean addTemplateMonitor(@RequestBody String data) throws IOException {
+//        AlertRuleTemplateMonitorEntity templateMonitorEntity = mapper.readValue(data, AlertRuleTemplateMonitorEntity.class);
+//        return service.addTemplateMonitor(templateMonitorEntity);
+//    }
 
     @RequestMapping("getMetricsUseLight")
     @ResponseBody

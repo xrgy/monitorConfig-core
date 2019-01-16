@@ -40,29 +40,29 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         return result.get(0);
     }
 
-    @Override
-    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name) {
-        String sql = "From AlertAvlRuleMonitorEntity Where alertRuleName = :name";
-        List<AlertAvlRuleMonitorEntity> list = em.createQuery(sql, AlertAvlRuleMonitorEntity.class)
-                .setParameter("name", name)
-                .getResultList();
-        if (list.size() > 0) {
-            return list.get(0);
-        }
-        return null;
-    }
-
-    @Override
-    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name) {
-        String sql = "From AlertPerfRuleMonitorEntity Where alertRuleName = :name";
-        List<AlertPerfRuleMonitorEntity> list = em.createQuery(sql, AlertPerfRuleMonitorEntity.class)
-                .setParameter("name", name)
-                .getResultList();
-        if (list.size() > 0) {
-            return list.get(0);
-        }
-        return null;
-    }
+//    @Override
+//    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name) {
+//        String sql = "From AlertAvlRuleMonitorEntity Where alertRuleName = :name";
+//        List<AlertAvlRuleMonitorEntity> list = em.createQuery(sql, AlertAvlRuleMonitorEntity.class)
+//                .setParameter("name", name)
+//                .getResultList();
+//        if (list.size() > 0) {
+//            return list.get(0);
+//        }
+//        return null;
+//    }
+//
+//    @Override
+//    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name) {
+//        String sql = "From AlertPerfRuleMonitorEntity Where alertRuleName = :name";
+//        List<AlertPerfRuleMonitorEntity> list = em.createQuery(sql, AlertPerfRuleMonitorEntity.class)
+//                .setParameter("name", name)
+//                .getResultList();
+//        if (list.size() > 0) {
+//            return list.get(0);
+//        }
+//        return null;
+//    }
 
 //    @Override
 //    public List<MetricsCollection> getMetricsCollection() {
@@ -195,16 +195,16 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         }
     }
 
-    @Override
-    @Transactional
-    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
-        try {
-            em.merge(templateMonitorEntity);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+//    @Override
+//    @Transactional
+//    public boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity) {
+//        try {
+//            em.merge(templateMonitorEntity);
+//            return true;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
     @Override
     public List<Metrics> getMetricsByLightType(String lightType) {
@@ -275,37 +275,37 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
                 .getSingleResult();
     }
 
-    @Override
-    public List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid) {
-        String sql = "From AlertRuleTemplateMonitorEntity Where templateUuid = :templateUuid";
-        return em.createQuery(sql, AlertRuleTemplateMonitorEntity.class)
-                .setParameter("templateUuid", uuid)
-                .getResultList();
-    }
-
-    @Override
-    public List<AlertAvlRuleMonitorEntity> getAvlRuleMonitorByMonitorId(String monitorId) {
-        String sql = "From AlertAvlRuleMonitorEntity Where monitorUuid = :monitorUuid and ";
-        return em.createQuery(sql, AlertAvlRuleMonitorEntity.class)
-                .setParameter("monitorUuid", monitorId)
-                .getResultList();
-    }
-
-    @Override
-    public List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId) {
-        String sql = "From AlertPerfRuleMonitorEntity Where alertRuleName = :name";
-        return em.createQuery(sql, AlertPerfRuleMonitorEntity.class)
-                .setParameter("monitorUuid", monitorId)
-                .getResultList();
-    }
-
-    @Override
-    public AlertRuleTemplateMonitorEntity getTemplateMonitorByMonitorUuid(String uuid) {
-        String sql = "From AlertRuleTemplateMonitorEntity Where monitorUuid = :monitorUuid";
-        return em.createQuery(sql, AlertRuleTemplateMonitorEntity.class)
-                .setParameter("monitorUuid", uuid)
-                .getSingleResult();
-    }
+//    @Override
+//    public List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid) {
+//        String sql = "From AlertRuleTemplateMonitorEntity Where templateUuid = :templateUuid";
+//        return em.createQuery(sql, AlertRuleTemplateMonitorEntity.class)
+//                .setParameter("templateUuid", uuid)
+//                .getResultList();
+//    }
+//
+//    @Override
+//    public List<AlertAvlRuleMonitorEntity> getAvlRuleMonitorByMonitorId(String monitorId) {
+//        String sql = "From AlertAvlRuleMonitorEntity Where monitorUuid = :monitorUuid and ";
+//        return em.createQuery(sql, AlertAvlRuleMonitorEntity.class)
+//                .setParameter("monitorUuid", monitorId)
+//                .getResultList();
+//    }
+//
+//    @Override
+//    public List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId) {
+//        String sql = "From AlertPerfRuleMonitorEntity Where alertRuleName = :name";
+//        return em.createQuery(sql, AlertPerfRuleMonitorEntity.class)
+//                .setParameter("monitorUuid", monitorId)
+//                .getResultList();
+//    }
+//
+//    @Override
+//    public AlertRuleTemplateMonitorEntity getTemplateMonitorByMonitorUuid(String uuid) {
+//        String sql = "From AlertRuleTemplateMonitorEntity Where monitorUuid = :monitorUuid";
+//        return em.createQuery(sql, AlertRuleTemplateMonitorEntity.class)
+//                .setParameter("monitorUuid", uuid)
+//                .getSingleResult();
+//    }
 
 
 }

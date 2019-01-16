@@ -19,14 +19,14 @@ public interface MonitorConfigDao {
      * @param name
      * @return
      */
-    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name);
+//    public AlertAvlRuleMonitorEntity getAvlRuleMonitor(String name);
 
     /**
      * 通过性能性告警规则名获取规则监控实体
      * @param name
      * @return
      */
-    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name);
+//    public AlertPerfRuleMonitorEntity getPerfRuleMonitor(String name);
 
 //    /**
 //     * 获取指标全部收集方式
@@ -127,7 +127,7 @@ public interface MonitorConfigDao {
      * @param templateMonitorEntity
      * @return
      */
-    boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
+//    boolean addTemplateMonitor(AlertRuleTemplateMonitorEntity templateMonitorEntity);
 
     /**
      * 通过三级规格获取该资源的指标列表
@@ -163,7 +163,7 @@ public interface MonitorConfigDao {
      * @param uuid
      * @return
      */
-    AlertRuleTemplateMonitorEntity getTemplateMonitorByMonitorUuid(String uuid);
+//    AlertRuleTemplateMonitorEntity getTemplateMonitorByMonitorUuid(String uuid);
 
     /**
      * 删除监控模板实体
@@ -200,19 +200,19 @@ public interface MonitorConfigDao {
      * @param uuid
      * @return
      */
-    List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid);
+//    List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid);
 
     /**
      * 通过monitorid获取可用性监控实体列表
      * @param monitorId
      * @return
      */
-    List<AlertAvlRuleMonitorEntity> getAvlRuleMonitorByMonitorId(String monitorId);
+//    List<AlertAvlRuleMonitorEntity> getAvlRuleMonitorByMonitorId(String monitorId);
 
     /**
      * 通过monitorid获取性能监控实体列表
      * @param monitorId
      * @return
      */
-    List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId);
+//    List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId);
 }
