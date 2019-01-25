@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 public class IssuePerfMonitorRuleEntity {
 
+    private String uuid;
+
     private String severity;
 
     private String firstCondition;

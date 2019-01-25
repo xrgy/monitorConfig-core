@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 public class IssueAvlMonitorRuleEntity {
 
+    private String uuid;
+
     private String severity;
 
     private String ruleName;

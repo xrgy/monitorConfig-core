@@ -70,6 +70,18 @@ public class MonitorConfigController {
 //        return mapper.writeValueAsString(service.getPerfRuleMonitor(name));
 //    }
 
+    @RequestMapping("getAvlRuleByRuleUuid")
+    @ResponseBody
+    public String getAvlRuleByRuleUuid(String uuid) throws Exception {
+        return mapper.writeValueAsString(service.getAvlRuleByRuleUuid(uuid));
+    }
+
+    @RequestMapping("getPerfRuleByRuleUuid")
+    @ResponseBody
+    public String getPerfRuleByRuleUuid(String uuid) throws Exception {
+        return mapper.writeValueAsString(service.getPerfRuleByRuleUuid(uuid));
+    }
+
     @RequestMapping("getMetricInfo")
     @ResponseBody
     public ResMetricInfo getMetricInfo(String lightType, String monitorMode) {
@@ -97,7 +109,7 @@ public class MonitorConfigController {
         return service.updateTemplate(view);
     }
 
-    @RequestMapping(value = "Template/{id}",method = RequestMethod.DELETE)
+    @RequestMapping(value = "template/{id}",method = RequestMethod.DELETE)
     @ResponseBody
     public String delTemplate(@PathVariable String id){
         service.detTemplate(id);
@@ -109,6 +121,13 @@ public class MonitorConfigController {
     public String getTemplateByLightType(String lightType) throws JsonProcessingException {
         return service.getTemplateByLightType(lightType);
     }
+
+    @RequestMapping("getAllTemplate")
+    @ResponseBody
+    public String getAllTemplate() throws JsonProcessingException {
+        return mapper.writeValueAsString(service.getAllTemplate());
+    }
+
 
     @RequestMapping("getAvlRule")
     @ResponseBody
@@ -173,4 +192,9 @@ public class MonitorConfigController {
         return mapper.writeValueAsString(service.getOpenTemplateData(uuid));
     }
 
+    @RequestMapping("getMetricByUuid")
+    @ResponseBody
+    public String getMetricByUuid(String uuid) throws JsonProcessingException {
+        return mapper.writeValueAsString(service.getMetricByUuid(uuid));
+    }
 }

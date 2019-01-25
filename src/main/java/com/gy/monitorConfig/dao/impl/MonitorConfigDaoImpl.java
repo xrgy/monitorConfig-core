@@ -270,10 +270,41 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     @Override
     public Metrics getMetricsByUuid(String uuid) {
         String sql = "From Metrics Where uuid =:uuid";
-        return em.createQuery(sql, Metrics.class)
+        List<Metrics> metrics =  em.createQuery(sql, Metrics.class)
                 .setParameter("uuid", uuid)
-                .getSingleResult();
+                .getResultList();
+        if (metrics.size()>0){
+            return metrics.get(0);
+        }else {
+            return null;
+        }
     }
+
+    @Override
+    public List<AlertRuleTemplateEntity> getAllTemplate() {
+        String sql = "From AlertRuleTemplateEntity";
+        return em.createQuery(sql, AlertRuleTemplateEntity.class)
+                .getResultList();
+    }
+
+    @Override
+    public List<AlertAvlRuleEntity> getAvlRuleByRuleUuid(String uuid) {
+        String sql = "FROM AlertAvlRuleEntity WHERE uuid =:uuid";
+        return em.createQuery(sql,AlertAvlRuleEntity.class)
+                .setParameter("uuid", uuid)
+                .getResultList();
+
+    }
+
+    @Override
+    public List<AlertPerfRuleEntity> getPerfRuleByRuleUuid(String uuid) {
+        String sql = "FROM AlertPerfRuleEntity WHERE uuid =:uuid";
+        return em.createQuery(sql,AlertPerfRuleEntity.class)
+                .setParameter("uuid", uuid)
+                .getResultList();
+    }
+
+
 
 //    @Override
 //    public List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid) {

@@ -196,6 +196,12 @@ public interface MonitorConfigDao {
     Metrics getMetricsByUuid(String uuid);
 
     /**
+     * 获取所有监控模板
+     * @return
+     */
+    List<AlertRuleTemplateEntity> getAllTemplate();
+
+    /**
      * 通过templateid获取监控模板实体
      * @param uuid
      * @return
@@ -215,4 +221,21 @@ public interface MonitorConfigDao {
      * @return
      */
 //    List<AlertPerfRuleMonitorEntity> getPerfRuleMonitorByMonitorId(String monitorId);
+
+
+    /**
+     * 查看该规则是否存在
+     * @param uuid
+     * @return
+     */
+    List<AlertAvlRuleEntity> getAvlRuleByRuleUuid(String uuid);
+
+    /**
+     * 查看该规则是否存在
+     * @param uuid
+     * @return
+     */
+    List<AlertPerfRuleEntity> getPerfRuleByRuleUuid(String uuid);
+
+
 }

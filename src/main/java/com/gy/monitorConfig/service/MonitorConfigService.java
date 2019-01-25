@@ -141,4 +141,32 @@ public interface MonitorConfigService {
      * @return
      */
     UpTemplateView getOpenTemplateData(String uuid);
+
+
+    /**
+     * 获取所有的监控模板
+     * @return
+     */
+    List<AlertRuleTemplateEntity> getAllTemplate();
+
+    /**
+     * 查看该规则是否存在
+     * @param uuid
+     * @return
+     */
+    AlertAvlRuleEntity getAvlRuleByRuleUuid(String uuid);
+
+    /**
+     * 查看该规则是否存在
+     * @param uuid
+     * @return
+     */
+    AlertPerfRuleEntity getPerfRuleByRuleUuid(String uuid);
+
+    /**
+     * 根据metric uuid获取metric
+     * @param uuid
+     * @return
+     */
+    Metrics getMetricByUuid(String uuid);
 }

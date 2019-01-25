@@ -163,7 +163,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         groups.setGroups(tempGroup);
         try {
             etcdDao.insertEtcdAlert(ruleMonitorEntity.getTemplateMonitorEntity().getUuid(), groups);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         /*perfStr.thenCombine(avlStr, (perf, avl) -> {
@@ -461,8 +461,37 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return view;
     }
 
+    @Override
+    public List<AlertRuleTemplateEntity> getAllTemplate() {
+        return dao.getAllTemplate();
+    }
+
+    @Override
+    public AlertAvlRuleEntity getAvlRuleByRuleUuid(String uuid) {
+        List<AlertAvlRuleEntity> avls = dao.getAvlRuleByRuleUuid(uuid);
+        if (avls.size()>0){
+            return avls.get(0);
+        }
+        return null;
+    }
+
+    @Override
+    public AlertPerfRuleEntity getPerfRuleByRuleUuid(String uuid) {
+        List<AlertPerfRuleEntity> perfs = dao.getPerfRuleByRuleUuid(uuid);
+        if (perfs.size()>0){
+            return perfs.get(0);
+        }
+        return null;
+    }
+
+    @Override
+    public Metrics getMetricByUuid(String uuid) {
+        return dao.getMetricsByUuid(uuid);
+    }
+
     private IssueAvlMonitorRuleEntity convertMonitorPerf2IssueAvl(AlertAvlRuleEntity avlRuleEntity, AlertAvlRuleMonitorEntity avlMonitor) {
         IssueAvlMonitorRuleEntity avlMonitorRuleEntity = new IssueAvlMonitorRuleEntity();
+        avlMonitorRuleEntity.setUuid(avlRuleEntity.getUuid());
         avlMonitorRuleEntity.setRuleName(avlMonitor.getAlertRuleName());
         avlMonitorRuleEntity.setMonitorUuid(avlMonitor.getMonitorUuid());
         avlMonitorRuleEntity.setSeverity(convertServerityDB(avlRuleEntity.getSeverity()));
@@ -480,6 +509,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         }
         Map<String, String> labels = new HashMap<>();
         labels.put("severity", ruleEntity.getSeverity());
+        labels.put("rule_id",ruleEntity.getUuid());
         rule.setLabels(labels);
         Map<String, String> annotations = new HashMap<>();
         annotations.put("description", ruleEntity.getDescription());
@@ -512,10 +542,11 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         rule.setExpr(expr);
         Map<String, String> labels = new HashMap<>();
         labels.put("severity", ruleEntity.getSeverity());
+        labels.put("rule_id",ruleEntity.getUuid());
         rule.setLabels(labels);
         Map<String, String> annotations = new HashMap<>();
         annotations.put("description", ruleEntity.getDescription());
-        annotations.put("threashold", ruleEntity.getFirstThreshold() + ruleEntity.getUnit());
+        annotations.put("threshold", ruleEntity.getFirstThreshold() + ruleEntity.getUnit());
         annotations.put("current_value", "{{$value}}" + ruleEntity.getUnit());
         rule.setAnnotations(annotations);
         return rule;
@@ -547,6 +578,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                                                                     int level, String levelOneFirstThreshold, int levelOneFirstCondition) {
 
         IssuePerfMonitorRuleEntity issuePerfMonitorRuleEntity = new IssuePerfMonitorRuleEntity();
+        issuePerfMonitorRuleEntity.setUuid(alertPerfRuleEntity.getUuid());
         if (1 == level) {
             issuePerfMonitorRuleEntity.setSeverity(convertServerityDB(alertPerfRuleEntity.getSeverity()));
             issuePerfMonitorRuleEntity.setFirstCondition(convertConditionDB(alertPerfRuleEntity.getAlertFirstCondition()));
@@ -715,21 +747,22 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                 casRule.add(setTemple(rule, lightType));
             });
             monitorTemplate.setCas(casRule);
-            List<AlertRuleTemplateEntity> casClusterRuleList = dao.getTemplateByLightType(lightType);
-            List<RuleTemplate> casClusterRule = new ArrayList<>();
-            casClusterRuleList.forEach(rule -> {
-                casClusterRule.add(setTemple(rule, lightType));
-            });
-            monitorTemplate.setCascluster(casClusterRule);
+            //不要cluster了
+//            List<AlertRuleTemplateEntity> casClusterRuleList = dao.getTemplateByLightType(lightType);
+//            List<RuleTemplate> casClusterRule = new ArrayList<>();
+//            casClusterRuleList.forEach(rule -> {
+//                casClusterRule.add(setTemple(rule, lightType));
+//            });
+//            monitorTemplate.setCascluster(casClusterRule);
 
-            List<AlertRuleTemplateEntity> cvkRuleList = dao.getTemplateByLightType(lightType);
+            List<AlertRuleTemplateEntity> cvkRuleList = dao.getTemplateByLightType(MonitorEnum.LightTypeEnum.CVK.value());
             List<RuleTemplate> cvkRule = new ArrayList<>();
             cvkRuleList.forEach(rule -> {
                 cvkRule.add(setTemple(rule, lightType));
             });
             monitorTemplate.setCvk(cvkRule);
 
-            List<AlertRuleTemplateEntity> vmRuleList = dao.getTemplateByLightType(lightType);
+            List<AlertRuleTemplateEntity> vmRuleList = dao.getTemplateByLightType(MonitorEnum.LightTypeEnum.VIRTUALMACHINE.value());
             List<RuleTemplate> vmRule = new ArrayList<>();
             vmRuleList.forEach(rule -> {
                 vmRule.add(setTemple(rule, lightType));
@@ -740,18 +773,18 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             mainRuleList.forEach(rule -> {
                 k8sRule.add(setTemple(rule, lightType));
             });
-            monitorTemplate.setCas(k8sRule);
+            monitorTemplate.setK8s(k8sRule);
 
-            List<AlertRuleTemplateEntity> k8snRuleList = dao.getTemplateByLightType(lightType);
+            List<AlertRuleTemplateEntity> k8snRuleList = dao.getTemplateByLightType(MonitorEnum.LightTypeEnum.K8SNODE.value());
             List<RuleTemplate> k8snRule = new ArrayList<>();
             k8snRuleList.forEach(rule -> {
                 k8snRule.add(setTemple(rule, lightType));
             });
             monitorTemplate.setK8sn(k8snRule);
 
-            List<AlertRuleTemplateEntity> k8scRuleList = dao.getTemplateByLightType(lightType);
+            List<AlertRuleTemplateEntity> k8scRuleList = dao.getTemplateByLightType(MonitorEnum.LightTypeEnum.K8SCONTAINER.value());
             List<RuleTemplate> k8scRule = new ArrayList<>();
-            k8snRuleList.forEach(rule -> {
+            k8scRuleList.forEach(rule -> {
                 k8scRule.add(setTemple(rule, lightType));
             });
             monitorTemplate.setK8sc(k8scRule);
