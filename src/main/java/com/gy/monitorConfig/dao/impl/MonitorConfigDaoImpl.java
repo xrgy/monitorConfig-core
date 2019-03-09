@@ -5,6 +5,7 @@ import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -241,6 +242,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
+    @Modifying
     public boolean delAvlByTemplateUuid(String uuid) {
         String sql = "DELETE FROM AlertAvlRuleEntity WHERE templateUuid =:templateUuid";
         int res = em.createQuery(sql)
@@ -259,6 +262,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
+    @Modifying
     public boolean delPerfByTemplateUuid(String uuid) {
         String sql = "DELETE FROM AlertPerfRuleEntity WHERE templateUuid =:templateUuid";
         int res = em.createQuery(sql)

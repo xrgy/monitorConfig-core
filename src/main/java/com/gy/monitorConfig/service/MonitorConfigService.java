@@ -2,10 +2,7 @@ package com.gy.monitorConfig.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.gy.monitorConfig.entity.*;
-import com.gy.monitorConfig.entity.metric.Metrics;
-import com.gy.monitorConfig.entity.metric.NewTemplateView;
-import com.gy.monitorConfig.entity.metric.ResMetricInfo;
-import com.gy.monitorConfig.entity.metric.UpTemplateView;
+import com.gy.monitorConfig.entity.metric.*;
 
 import java.util.List;
 import java.util.Map;
@@ -169,4 +166,6 @@ public interface MonitorConfigService {
      * @return
      */
     Metrics getMetricByUuid(String uuid);
+
+    Metrics getMetricInfoByRule(String type, String ruleId);
 }

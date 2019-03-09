@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.common.MonitorEnum;
 import com.gy.monitorConfig.entity.monitor.*;
 import com.gy.monitorConfig.service.MonitorService;
+import com.gy.monitorConfig.util.EtcdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
@@ -42,12 +43,12 @@ public class MonitorServiceImpl implements MonitorService {
 
     private String monitorPrefix(){
         String ip = "";
-//        try {
-            ip="127.0.0.1";
-//            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+//            ip="127.0.0.1";
+            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return HTTP+ip+":"+PORT+"/"+PREFIX+"/";
     }
 

@@ -3,6 +3,7 @@ package com.gy.monitorConfig.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gy.monitorConfig.entity.*;
+import com.gy.monitorConfig.entity.metric.Metrics;
 import com.gy.monitorConfig.entity.metric.NewTemplateView;
 import com.gy.monitorConfig.entity.metric.ResMetricInfo;
 import com.gy.monitorConfig.entity.metric.UpTemplateView;
@@ -87,12 +88,24 @@ public class MonitorConfigController {
     public ResMetricInfo getMetricInfo(String lightType, String monitorMode) {
         return service.getMetricInfo(lightType, monitorMode);
     }
+    @RequestMapping("getMetricInfoByRule")
+    @ResponseBody
+    public String getMetricInfoByRule(String type, String ruleId) throws JsonProcessingException {
+        return mapper.writeValueAsString(service.getMetricInfoByRule(type, ruleId));
+    }
 
     @RequestMapping("isTemplateNameDup")
     @ResponseBody
     public boolean isTemplateNameDup(String name) {
         //返回true 未重复
         return service.isTemplateNameDup(name);
+    }
+    @RequestMapping(value = "template/{id}",method = RequestMethod.GET)
+    @ResponseBody
+    public String getTemplate(@PathVariable("id") String id) throws IOException {
+//        NewTemplateView view = mapper.readValue(data, NewTemplateView.class);
+//        return service.addTemplate(view);
+        return "";
     }
 
     @RequestMapping(value = "template",method = RequestMethod.POST)
@@ -102,9 +115,9 @@ public class MonitorConfigController {
         return service.addTemplate(view);
     }
 
-    @RequestMapping(value = "updateTemplate",method = RequestMethod.POST)
+    @RequestMapping(value = "template/{id}",method = RequestMethod.PUT)
     @ResponseBody
-    public boolean updateTemplate(@RequestBody String data) throws IOException {
+    public boolean updateTemplate(@PathVariable("id") String id,@RequestBody String data) throws IOException {
         UpTemplateView view = mapper.readValue(data, UpTemplateView.class);
         return service.updateTemplate(view);
     }

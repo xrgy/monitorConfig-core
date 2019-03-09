@@ -94,12 +94,12 @@ public class ProperUtil {
             String []str =dbEndpoint.split(":");
             String dbName =System.getenv("DATABASE_NAME");
 
-//            String ip = getClusterIpByServiceName(str[0]);
-//            System.out.println(ip);
-            String dbUrl = "jdbc:mysql://"+dbEndpoint+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
+            String ip = getClusterIpByServiceName(str[0]);
+            System.out.println(ip);
+//            String dbUrl = "jdbc:mysql://"+dbEndpoint+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
 //
 //
-//            String dbUrl = "jdbc:mysql://"+ip+":"+str[1]+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
+            String dbUrl = "jdbc:mysql://"+ip+":"+str[1]+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
             if (!"".equals(dbUrl) && null != dbUrl) {
                 confMaps.put("spring.datasource.url", dbUrl);
             }
