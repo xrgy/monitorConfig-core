@@ -101,17 +101,12 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
-    public boolean isTemplateNameDup(String name) {
+    public  List<AlertRuleTemplateEntity> isTemplateNameDup(String name) {
         String sql = "From AlertRuleTemplateEntity Where templateName = :name";
         List<AlertRuleTemplateEntity> entityList = em.createQuery(sql, AlertRuleTemplateEntity.class)
                 .setParameter("name", name)
                 .getResultList();
-        if (entityList.size() > 0) {
-            return false;
-        } else {
-            return true;
-        }
-
+        return entityList;
     }
 
     @Override
@@ -158,9 +153,13 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     @Override
     public AlertRuleTemplateEntity getTemplateByUuid(String uuid) {
         String sql = "From AlertRuleTemplateEntity Where uuid =:uuid";
-        return em.createQuery(sql, AlertRuleTemplateEntity.class)
+        List<AlertRuleTemplateEntity> list =  em.createQuery(sql, AlertRuleTemplateEntity.class)
                 .setParameter("uuid", uuid)
-                .getSingleResult();
+                .getResultList();
+        if (list.size() > 0) {
+            return list.get(0);
+        }
+        return null;
     }
 
     @Override
@@ -367,6 +366,28 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
                 .getResultList();
     }
 
+    @Override
+    @Transactional
+    @Modifying
+    public boolean delPerfByUuid(String uuid) {
+        String sql = "DELETE FROM AlertPerfRuleEntity WHERE uuid =:uuid";
+        int res = em.createQuery(sql)
+                .setParameter("uuid", uuid)
+                .executeUpdate();
+        return res > 0;
+    }
+
+    @Override
+    @Transactional
+    @Modifying
+    public boolean delPerfByTemAndMetric(String uuid, String metricUuid) {
+        String sql = "DELETE FROM AlertPerfRuleEntity WHERE templateUuid =:templateId and metricUuid =:metricId";
+        int res = em.createQuery(sql)
+                .setParameter("templateId", uuid)
+                .setParameter("metricId",metricUuid)
+                .executeUpdate();
+        return res > 0;
+    }
 
 
 //    @Override

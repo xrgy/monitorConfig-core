@@ -236,8 +236,8 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         //删除性能
         boolean perf = dao.delPerfByTemplateUuid(id);
 //        if (avl && perf) {
-            //删除alertruletemplate
-            dao.delTemplateByTemplateUuid(id);
+        //删除alertruletemplate
+        dao.delTemplateByTemplateUuid(id);
 //        }
     }
 
@@ -256,42 +256,65 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
         view.getPerformance().forEach(perf -> {
             Optional<AlertPerfRuleEntity> perfOneOpt = perfRuleList.stream()
-                    .filter(x -> x.getUuid().equals(perf.getLevelOneUuid())).findFirst();
+                    .filter(x -> null != perf.getLevelOneUuid() && x.getUuid().equals(perf.getLevelOneUuid())).findFirst();
             if (perfOneOpt.isPresent()) {
-                perfOneOpt.get().setSeverity(Integer.parseInt(perf.getLevelOneSeverity()));
-                perfOneOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelOneAlertFirstCondition()));
-                perfOneOpt.get().setFirstThreshold(perf.getLevelOneFirstThreshold());
-                perfOneOpt.get().setExpressionMore(perf.getLevelOneExpressionMore());
-                perfOneOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelOneAlertSecondCondition()));
-                if (null != perf.getLevelOneSecondThreshold()) {
-                    perfOneOpt.get().setSecondThreshold(perf.getLevelOneSecondThreshold());
-                }
+                if (null == perf.getLevelOneFirstThreshold() || "".equals(perf.getLevelOneFirstThreshold())) {
+                    //需要删除之前数据库中的规则
+//                    dao.delPerfByUuid(perfOneOpt.get().getUuid());
+                    dao.delPerfByTemAndMetric(view.getUuid(),perfOneOpt.get().getMetricUuid());
+                } else {
+                    perfOneOpt.get().setSeverity(Integer.parseInt(perf.getLevelOneSeverity()));
+                    perfOneOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelOneAlertFirstCondition()));
+                    perfOneOpt.get().setFirstThreshold(perf.getLevelOneFirstThreshold());
+                    perfOneOpt.get().setExpressionMore(perf.getLevelOneExpressionMore());
+                    perfOneOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelOneAlertSecondCondition()));
+                    if (null != perf.getLevelOneSecondThreshold() || "".equals(perf.getLevelOneSecondThreshold())) {
+                        perfOneOpt.get().setSecondThreshold(perf.getLevelOneSecondThreshold());
+                    }
+
 
                 Optional<AlertPerfRuleEntity> perfTwoOpt = perfRuleList.stream()
-                        .filter(x -> x.getUuid().equals(perf.getLevelTwoUuid())).findFirst();
+                        .filter(x -> null != perf.getLevelTwoUuid() && x.getUuid().equals(perf.getLevelTwoUuid())).findFirst();
                 if (perfTwoOpt.isPresent()) {
-                    perfTwoOpt.get().setSeverity(Integer.parseInt(perf.getLevelTwoSeverity()));
-                    perfTwoOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelTwoAlertFirstCondition()));
-                    perfTwoOpt.get().setFirstThreshold(perf.getLevelTwoFirstThreshold());
-                    perfTwoOpt.get().setExpressionMore(perf.getLevelTwoExpressionMore());
-                    perfTwoOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelTwoAlertSecondCondition()));
-                    if (null != perf.getLevelTwoSecondThreshold()) {
-                        perfTwoOpt.get().setSecondThreshold(perf.getLevelTwoSecondThreshold());
+                    if (null == perf.getLevelTwoFirstThreshold() || "".equals(perf.getLevelTwoFirstThreshold())) {
+                        dao.delPerfByUuid(perfTwoOpt.get().getUuid());
+                    } else {
+                        perfTwoOpt.get().setSeverity(Integer.parseInt(perf.getLevelTwoSeverity()));
+                        perfTwoOpt.get().setAlertFirstCondition(Integer.parseInt(perf.getLevelTwoAlertFirstCondition()));
+                        perfTwoOpt.get().setFirstThreshold(perf.getLevelTwoFirstThreshold());
+                        perfTwoOpt.get().setExpressionMore(perf.getLevelTwoExpressionMore());
+                        perfTwoOpt.get().setAlertSecondCondition(Integer.parseInt(perf.getLevelTwoAlertSecondCondition()));
+                        if (null != perf.getLevelTwoSecondThreshold() || "".equals(perf.getLevelTwoSecondThreshold())) {
+                            perfTwoOpt.get().setSecondThreshold(perf.getLevelTwoSecondThreshold());
+                        }
+                    }
+                } else {
+                    //一级以前存在 二级不存在，现在新增二级
+                    //
+                    if (null != perf.getLevelTwoFirstThreshold() || "".equals(perf.getLevelTwoFirstThreshold())) {
+                        MetricInfo info = new MetricInfo();
+                        BeanUtils.copyProperties(perf, info);
+                        info.setUuid(perf.getMetricUuid());
+                        AlertPerfRuleEntity perfRuleEntity2 = setPerfInsertRule(info, LEVEL_TWO, templateEntity.getUuid());
+                        newPerfRule.add(perfRuleEntity2);
                     }
                 }
+            }
             }
             if (!perfOneOpt.isPresent()) {
 
 //                if (!perfOneOpt.isPresent() && !perfTwoOpt.isPresent()) {
                 //都不存在，则添加
-                if (null != perf.getLevelOneFirstThreshold()) {
+                if (null != perf.getLevelOneFirstThreshold() || "".equals(perf.getLevelOneFirstThreshold())) {
                     MetricInfo info1 = new MetricInfo();
                     BeanUtils.copyProperties(perf, info1);
+                    info1.setUuid(perf.getMetricUuid());
                     AlertPerfRuleEntity a = setPerfInsertRule(info1, LEVEL_ONE, templateEntity.getUuid());
                     newPerfRule.add(a);
-                    if (null != perf.getLevelTwoFirstThreshold()) {
+                    if (null != perf.getLevelTwoFirstThreshold() || "".equals(perf.getLevelTwoFirstThreshold())) {
                         MetricInfo info2 = new MetricInfo();
                         BeanUtils.copyProperties(perf, info2);
+                        info2.setUuid(perf.getMetricUuid());
                         AlertPerfRuleEntity b = setPerfInsertRule(info2, LEVEL_TWO, templateEntity.getUuid());
                         newPerfRule.add(b);
                     }
@@ -422,17 +445,34 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         UpTemplateView view = new UpTemplateView();
         BeanUtils.copyProperties(templateEntity, view);
         List<UpAvaliable> avaliableList = new ArrayList<>();
+        Map<String, UpAvaliable> mappAvl = new HashMap<>();
         avlRuleList.forEach(avl -> {
             UpAvaliable avaliable = new UpAvaliable();
             BeanUtils.copyProperties(avl, avaliable);
+            String strseve = String.valueOf(avl.getSeverity());
+            avaliable.setSeverity(strseve);
             Optional<Metrics> metrics = metricList.stream().filter(x -> x.getUuid().equals(avl.getMetricUuid())).findFirst();
 //            Metrics metrics = dao.getMetricsByUuid(avl.getMetricUuid());
             if (metrics.isPresent()) {
                 MetricInfo metricInfo = new MetricInfo();
+                metricInfo.setSeverity(strseve);
+                metricInfo.setAvlUuid(avl.getUuid());
                 BeanUtils.copyProperties(metrics.get(), metricInfo);
                 avaliable.setQuotaInfo(metricInfo);
                 avaliableList.add(avaliable);
+                mappAvl.put(avaliable.getMetricUuid(), avaliable);
             }
+        });
+        List<Metrics> lastAvlMetric = metricList.stream().filter(x -> x.getMetricGroup().equals("available")
+                && !mappAvl.keySet().contains(x.getUuid())).collect(Collectors.toList());
+        lastAvlMetric.forEach(m -> {
+            UpAvaliable avl = new UpAvaliable();
+            MetricInfo metricInfo = new MetricInfo();
+            BeanUtils.copyProperties(m, metricInfo);
+            avl.setQuotaInfo(metricInfo);
+            avl.setTemplateUuid(templateEntity.getUuid());
+            avl.setMetricUuid(m.getUuid());
+            avaliableList.add(avl);
         });
         view.setAvailable(avaliableList);
         Map<String, UpPerformance> mapp = new HashMap<>();
@@ -440,7 +480,8 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         perfRuleList.forEach(perf -> {
             UpPerformance performance = null;
             if (mapp.containsKey(perf.getMetricUuid())) {
-                performance = mapp.get(perf.getMetricUuid());
+                performance=performanceList.stream().filter(x->x.getQuotaInfo().getUuid().equals(perf.getMetricUuid())).findFirst().get();
+//                performance = mapp.get(perf.getMetricUuid());
             } else {
                 performance = new UpPerformance();
                 BeanUtils.copyProperties(perf, performance);
@@ -452,25 +493,40 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                     performance.setQuotaInfo(metricInfo);
                     mapp.put(perf.getMetricUuid(), performance);
                 }
+                performanceList.add(performance);
             }
             if (perf.getAlertLevel().equals(LEVEL_ONE)) {
-                performance.setLevelOneUuid(perf.getUuid());
-                performance.setLevelOneSeverity(perf.getSeverity() + "");
-                performance.setLevelOneAlertFirstCondition(perf.getAlertFirstCondition() + "");
-                performance.setLevelOneFirstThreshold(perf.getFirstThreshold());
-                performance.setLevelOneExpressionMore(perf.getExpressionMore());
-                performance.setLevelOneAlertSecondCondition(perf.getAlertSecondCondition() + "");
-                performance.setLevelOneSecondThreshold(perf.getSecondThreshold());
+//                performance.setLevelOneUuid(perf.getUuid());
+                //performance.setLevelOneSeverity(perf.getSeverity() + "");
+                performance.getQuotaInfo().setLevelOneUuid(perf.getUuid());
+                performance.getQuotaInfo().setLevelOneSeverity(perf.getSeverity() + "");
+                performance.getQuotaInfo().setLevelOneAlertFirstCondition(perf.getAlertFirstCondition() + "");
+                performance.getQuotaInfo().setLevelOneFirstThreshold(perf.getFirstThreshold());
+                performance.getQuotaInfo().setLevelOneExpressionMore(perf.getExpressionMore());
+                performance.getQuotaInfo().setLevelOneAlertSecondCondition(perf.getAlertSecondCondition() + "");
+                performance.getQuotaInfo().setLevelOneSecondThreshold(perf.getSecondThreshold());
+//                performance.setLevelOneAlertFirstCondition(perf.getAlertFirstCondition() + "");
+//                performance.setLevelOneFirstThreshold(perf.getFirstThreshold());
+//                performance.setLevelOneExpressionMore(perf.getExpressionMore());
+//                performance.setLevelOneAlertSecondCondition(perf.getAlertSecondCondition() + "");
+//                performance.setLevelOneSecondThreshold(perf.getSecondThreshold());
             } else if (perf.getAlertLevel().equals(LEVEL_TWO)) {
-                performance.setLevelTwoUuid(perf.getUuid());
-                performance.setLevelTwoSeverity(perf.getSeverity() + "");
-                performance.setLevelTwoAlertFirstCondition(perf.getAlertFirstCondition() + "");
-                performance.setLevelTwoFirstThreshold(perf.getFirstThreshold());
-                performance.setLevelTwoExpressionMore(perf.getExpressionMore());
-                performance.setLevelTwoAlertSecondCondition(perf.getAlertSecondCondition() + "");
-                performance.setLevelTwoSecondThreshold(perf.getSecondThreshold());
+//                performance.setLevelTwoUuid(perf.getUuid());
+                performance.getQuotaInfo().setLevelTwoUuid(perf.getUuid());
+                performance.getQuotaInfo().setLevelTwoSeverity(perf.getSeverity() + "");
+                performance.getQuotaInfo().setLevelTwoAlertFirstCondition(perf.getAlertFirstCondition() + "");
+                performance.getQuotaInfo().setLevelTwoFirstThreshold(perf.getFirstThreshold());
+                performance.getQuotaInfo().setLevelTwoExpressionMore(perf.getExpressionMore());
+                performance.getQuotaInfo().setLevelTwoAlertSecondCondition(perf.getAlertSecondCondition() + "");
+                performance.getQuotaInfo().setLevelTwoSecondThreshold(perf.getSecondThreshold());
+//                performance.setLevelTwoSeverity(perf.getSeverity() + "");
+//                performance.setLevelTwoAlertFirstCondition(perf.getAlertFirstCondition() + "");
+//                performance.setLevelTwoFirstThreshold(perf.getFirstThreshold());
+//                performance.setLevelTwoExpressionMore(perf.getExpressionMore());
+//                performance.setLevelTwoAlertSecondCondition(perf.getAlertSecondCondition() + "");
+//                performance.setLevelTwoSecondThreshold(perf.getSecondThreshold());
             }
-            performanceList.add(performance);
+
         });
         List<Metrics> lastMetric = metricList.stream().filter(x -> x.getMetricGroup().equals("performance")
                 && !mapp.keySet().contains(x.getUuid())).collect(Collectors.toList());
@@ -499,11 +555,11 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             lightTypeList.add(MonitorEnum.LightTypeEnum.MYSQL.value());
         } else if (type.equals(MonitorEnum.MiddleTypeEnum.MIDDLEWARE.value())) {
             lightTypeList.add(MonitorEnum.LightTypeEnum.TOMCAT.value());
-        }else if (type.equals(MonitorEnum.MiddleTypeEnum.VIRTUALIZATION.value())) {
+        } else if (type.equals(MonitorEnum.MiddleTypeEnum.VIRTUALIZATION.value())) {
             lightTypeList.add(MonitorEnum.LightTypeEnum.CAS.value());
             lightTypeList.add(MonitorEnum.LightTypeEnum.CVK.value());
             lightTypeList.add(MonitorEnum.LightTypeEnum.VIRTUALMACHINE.value());
-        }else if (type.equals(MonitorEnum.MiddleTypeEnum.CONTAINER.value())) {
+        } else if (type.equals(MonitorEnum.MiddleTypeEnum.CONTAINER.value())) {
             lightTypeList.add(MonitorEnum.LightTypeEnum.K8S.value());
             lightTypeList.add(MonitorEnum.LightTypeEnum.K8SNODE.value());
             lightTypeList.add(MonitorEnum.LightTypeEnum.K8SCONTAINER.value());
@@ -784,8 +840,18 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     }
 
     @Override
-    public boolean isTemplateNameDup(String name) {
-        return dao.isTemplateNameDup(name);
+    public boolean isTemplateNameDup(String name,String templateUuid) {
+        List<AlertRuleTemplateEntity> entityList = dao.isTemplateNameDup(name);
+        if (entityList.size() > 0) {
+            Optional<AlertRuleTemplateEntity> rule = entityList.stream().filter(x->x.getUuid().equals(templateUuid)).findFirst();
+            if (rule.isPresent()){
+                return true;
+            }else {
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
     @Override

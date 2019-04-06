@@ -53,6 +53,10 @@ public class MetricInfo {
     //告警级别
     private String severity;
 
+    private String avlUuid;
+    private String levelOneUuid;
+    private String levelTwoUuid;
+
     @JsonProperty("level_one_severity")
     private String levelOneSeverity;
 

@@ -96,9 +96,9 @@ public class MonitorConfigController {
 
     @RequestMapping("isTemplateNameDup")
     @ResponseBody
-    public boolean isTemplateNameDup(String name) {
+    public boolean isTemplateNameDup(String name,String templateUuid) {
         //返回true 未重复
-        return service.isTemplateNameDup(name);
+        return service.isTemplateNameDup(name,templateUuid);
     }
     @RequestMapping(value = "template/{id}",method = RequestMethod.GET)
     @ResponseBody

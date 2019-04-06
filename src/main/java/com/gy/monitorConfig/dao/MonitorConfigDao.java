@@ -59,7 +59,7 @@ public interface MonitorConfigDao {
      * @param name
      * @return
      */
-    public boolean isTemplateNameDup(String name);
+    public  List<AlertRuleTemplateEntity> isTemplateNameDup(String name);
 
     /**
      * 持久化模板实体到数据库
@@ -240,4 +240,7 @@ public interface MonitorConfigDao {
     List<AlertPerfRuleEntity> getPerfRuleByRuleUuid(String uuid);
 
 
+    boolean delPerfByUuid(String uuid);
+
+    boolean delPerfByTemAndMetric(String uuid, String metricUuid);
 }

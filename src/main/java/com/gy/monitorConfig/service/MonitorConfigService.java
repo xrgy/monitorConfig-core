@@ -45,7 +45,7 @@ public interface MonitorConfigService {
      * @param name
      * @return
      */
-    public boolean isTemplateNameDup(String name);
+    public boolean isTemplateNameDup(String name,String templateUuid);
 
     /**
      * 新建模板
