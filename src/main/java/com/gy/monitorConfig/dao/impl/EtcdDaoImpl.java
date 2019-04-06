@@ -25,6 +25,8 @@ public class EtcdDaoImpl implements EtcdDao {
 
     //    private static final String IP="47.105.64.176";
     private static final String IP = "47.94.157.199";
+//    private static final String IP = "47.105.64.176";
+
 
     //    private static final String IP="172.31.105.232";
     private static final String ETCD_PORT = "2379";

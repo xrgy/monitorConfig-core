@@ -90,5 +90,28 @@ public interface MonitorEnum {
             return this.value;
         }
     }
+    enum MiddleTypeEnum{
+
+        NETWORK_DEVICE("network_device"),
+
+        MIDDLEWARE("middleware"),
+
+        DATABASE("database"),
+
+        VIRTUALIZATION("virtualization"),
+
+        CONTAINER("container");
+
+
+        private String value;
+
+        MiddleTypeEnum(String msg) {
+            this.value = msg;
+        }
+
+        public String value() {
+            return this.value;
+        }
+    }
 
 }

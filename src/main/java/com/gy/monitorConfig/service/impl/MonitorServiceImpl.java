@@ -43,12 +43,12 @@ public class MonitorServiceImpl implements MonitorService {
 
     private String monitorPrefix(){
         String ip = "";
-        try {
-//            ip="127.0.0.1";
-            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+            ip="127.0.0.1";
+//            ip = EtcdUtil.getClusterIpByServiceName("monitor-core-service");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         return HTTP+ip+":"+PORT+"/"+PREFIX+"/";
     }
 

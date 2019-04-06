@@ -21,7 +21,7 @@ public class ProperUtil {
     public static final String DB_PASSWORD = null;
     public static final String DB_URL = null;
     private static final String IP="47.94.157.199";
-
+//    private static final String IP = "47.105.64.176";
     //    private static final String IP="172.31.105.232";
     private static final String ETCD_PORT="2379";
     private static final String PATH_SERVICE_INFO="v2/keys/registry/services/specs/default/";
@@ -94,12 +94,12 @@ public class ProperUtil {
             String []str =dbEndpoint.split(":");
             String dbName =System.getenv("DATABASE_NAME");
 
-            String ip = getClusterIpByServiceName(str[0]);
-            System.out.println(ip);
-//            String dbUrl = "jdbc:mysql://"+dbEndpoint+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
+//            String ip = getClusterIpByServiceName(str[0]);
+//            System.out.println(ip);
+            String dbUrl = "jdbc:mysql://"+dbEndpoint+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
 //
 //
-            String dbUrl = "jdbc:mysql://"+ip+":"+str[1]+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
+//            String dbUrl = "jdbc:mysql://"+ip+":"+str[1]+"/"+dbName+"?characterEncoding=utf8&useSSL=false";
             if (!"".equals(dbUrl) && null != dbUrl) {
                 confMaps.put("spring.datasource.url", dbUrl);
             }

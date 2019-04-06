@@ -14,13 +14,13 @@ ADD monitorConfig-core-1.0.jar /monitorConfig-core.jar
 
 EXPOSE 8081
 EXPOSE 30007
-
-ENTRYPOINT ["java",\
-            "-Djava.rmi.server.hostname=47.94.157.199",\
-            "-Dcom.sun.management.jmxremote=true",\
-            "-Dcom.sun.management.jmxremote.port=30007",\
-            "-Dcom.sun.management.jmxremote.rmi.port=30007",\
-            "-Dcom.sun.management.jmxremote.ssl=false",\
-            "-Dcom.sun.management.jmxremote.authenticate=false",\
-            "-Dcom.sun.management.jmxremote.local.only=false",\
-            "-jar","/monitorConfig-core.jar"]
+#"-Djava.rmi.server.hostname=47.94.157.199",\
+#ENTRYPOINT ["java",\
+#            "-Djava.rmi.server.hostname=47.105.64.176",\
+#            "-Dcom.sun.management.jmxremote=true",\
+#            "-Dcom.sun.management.jmxremote.port=30007",\
+#            "-Dcom.sun.management.jmxremote.rmi.port=30007",\
+#            "-Dcom.sun.management.jmxremote.ssl=false",\
+#            "-Dcom.sun.management.jmxremote.authenticate=false",\
+#            "-Dcom.sun.management.jmxremote.local.only=false",\
+#            "-jar","/monitorConfig-core.jar"]

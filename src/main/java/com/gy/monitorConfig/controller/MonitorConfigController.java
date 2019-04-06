@@ -137,8 +137,9 @@ public class MonitorConfigController {
 
     @RequestMapping("getAllTemplate")
     @ResponseBody
-    public String getAllTemplate() throws JsonProcessingException {
-        return mapper.writeValueAsString(service.getAllTemplate());
+    public String getAllTemplate(@RequestBody String data,String type) throws IOException {
+        PageData view = mapper.readValue(data, PageData.class);
+        return mapper.writeValueAsString(service.getAllTemplate(view,type));
     }
 
 

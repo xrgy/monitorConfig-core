@@ -1,8 +1,11 @@
 package com.gy.monitorConfig.dao.impl;
 
+import com.gy.monitorConfig.common.EntityAndDTO;
 import com.gy.monitorConfig.dao.MonitorConfigDao;
 import com.gy.monitorConfig.entity.*;
 import com.gy.monitorConfig.entity.metric.*;
+import org.hibernate.SQLQuery;
+import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -216,6 +221,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
+    @Modifying
     public boolean delTemplateMonitorByMonitorUuid(String uuid) {
         String sql = "DELETE FROM AlertRuleTemplateMonitorEntity WHERE monitorUuid =:monitoruuid";
         int res = em.createQuery(sql)
@@ -224,6 +231,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         return res > 0;
     }
     @Override
+    @Transactional
+    @Modifying
     public boolean delTemplateByTemplateUuid(String uuid) {
         String sql = "DELETE FROM AlertRuleTemplateEntity WHERE uuid =:uuid";
         int res = em.createQuery(sql)
@@ -233,6 +242,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
+    @Modifying
     public boolean delAvlMonitorByMonitorUuid(String uuid) {
         String sql = "DELETE FROM AlertAvlRuleMonitorEntity WHERE monitorUuid =:monitoruuid";
         int res = em.createQuery(sql)
@@ -253,6 +264,8 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
+    @Transactional
+    @Modifying
     public boolean delPerfMonitorByMonitorUuid(String uuid) {
         String sql = "DELETE FROM AlertPerfRuleMonitorEntity WHERE monitorUuid =:monitoruuid";
         int res = em.createQuery(sql)
@@ -286,10 +299,55 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
     }
 
     @Override
-    public List<AlertRuleTemplateEntity> getAllTemplate() {
+    public List<AlertRuleTemplateEntity> getAllTemplate(List<String> type) {
         String sql = "From AlertRuleTemplateEntity";
-        return em.createQuery(sql, AlertRuleTemplateEntity.class)
-                .getResultList();
+        if (type.size()==0) {
+            return em.createQuery(sql, AlertRuleTemplateEntity.class)
+                    .getResultList();
+        }else {
+            sql += " Where";
+            for (int i=0;i<type.size();i++) {
+                sql += " lightType =:lightType"+i;
+                if (i<type.size()-1){
+                    sql+=" or ";
+                }
+            }
+            Query query =  em.createQuery(sql, AlertRuleTemplateEntity.class);
+            for (int i=0;i<type.size();i++) {
+                query.setParameter("lightType"+i,type.get(i));
+            }
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public List<AlertRuleTemplateEntity> getTemplateByPage(int startIndex, int pageSize, List<String> type) {
+        String sql = "select  * FROM tbl_alert_rule_template";
+        if (type.size()>0) {
+            sql += " Where";
+            for (int i=0;i<type.size();i++) {
+                sql += " light_type =? ";
+                if (i<type.size()-1){
+                    sql+=" or ";
+                }
+            }
+        }
+
+        Query query = em.createNativeQuery(sql);
+        if (type.size()>0) {
+            for (int i=0;i<type.size();i++) {
+                query.setParameter(i+1, type.get(i));
+            }
+        }
+        //将查询结果集转为Map
+        query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+        //设置分页
+        query.setFirstResult(startIndex);
+        query.setMaxResults(pageSize);
+        //获取查询结果集
+        List<Map<String, Object>> rungroupInfo = query.getResultList();
+        List<AlertRuleTemplateEntity> rungrouppushList = EntityAndDTO.mapConvertToBean(rungroupInfo, AlertRuleTemplateEntity.class);
+        return rungrouppushList;
     }
 
     @Override

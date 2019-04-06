@@ -199,7 +199,9 @@ public interface MonitorConfigDao {
      * 获取所有监控模板
      * @return
      */
-    List<AlertRuleTemplateEntity> getAllTemplate();
+    List<AlertRuleTemplateEntity> getAllTemplate(List<String> type);
+
+    List<AlertRuleTemplateEntity> getTemplateByPage(int startIndex,int pageSize,List<String> type);
 
     /**
      * 通过templateid获取监控模板实体

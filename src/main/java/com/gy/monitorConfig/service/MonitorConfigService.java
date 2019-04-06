@@ -141,10 +141,11 @@ public interface MonitorConfigService {
 
 
     /**
-     * 获取所有的监控模板
+     * type且三级规格，则获取该三级规格的模板
+     * type为all获取所有的监控模板
      * @return
      */
-    List<AlertRuleTemplateEntity> getAllTemplate();
+    PageBean getAllTemplate(PageData view,String type);
 
     /**
      * 查看该规则是否存在

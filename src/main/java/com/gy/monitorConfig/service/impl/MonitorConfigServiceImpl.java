@@ -235,10 +235,10 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         boolean avl = dao.delAvlByTemplateUuid(id);
         //删除性能
         boolean perf = dao.delPerfByTemplateUuid(id);
-        if (avl && perf) {
+//        if (avl && perf) {
             //删除alertruletemplate
             dao.delTemplateByTemplateUuid(id);
-        }
+//        }
     }
 
     @Override
@@ -280,7 +280,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
                     }
                 }
             }
-            if (!perfOneOpt.isPresent() ) {
+            if (!perfOneOpt.isPresent()) {
 
 //                if (!perfOneOpt.isPresent() && !perfTwoOpt.isPresent()) {
                 //都不存在，则添加
@@ -418,14 +418,14 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         AlertRuleTemplateEntity templateEntity = dao.getTemplateByUuid(uuid);
         List<AlertAvlRuleEntity> avlRuleList = dao.getAvlRuleByTemplateId(uuid);
         List<AlertPerfRuleEntity> perfRuleList = dao.getPerfRuleByTemplateId(uuid);
-        List<Metrics> metricList = dao.getMetricByTypeAndMode(templateEntity.getLightType(),templateEntity.getMonitorMode());
+        List<Metrics> metricList = dao.getMetricByTypeAndMode(templateEntity.getLightType(), templateEntity.getMonitorMode());
         UpTemplateView view = new UpTemplateView();
         BeanUtils.copyProperties(templateEntity, view);
         List<UpAvaliable> avaliableList = new ArrayList<>();
         avlRuleList.forEach(avl -> {
             UpAvaliable avaliable = new UpAvaliable();
             BeanUtils.copyProperties(avl, avaliable);
-            Optional<Metrics> metrics = metricList.stream().filter(x->x.getUuid().equals(avl.getMetricUuid())).findFirst();
+            Optional<Metrics> metrics = metricList.stream().filter(x -> x.getUuid().equals(avl.getMetricUuid())).findFirst();
 //            Metrics metrics = dao.getMetricsByUuid(avl.getMetricUuid());
             if (metrics.isPresent()) {
                 MetricInfo metricInfo = new MetricInfo();
@@ -444,7 +444,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             } else {
                 performance = new UpPerformance();
                 BeanUtils.copyProperties(perf, performance);
-                Optional<Metrics> metrics = metricList.stream().filter(x->x.getUuid().equals(perf.getMetricUuid())).findFirst();
+                Optional<Metrics> metrics = metricList.stream().filter(x -> x.getUuid().equals(perf.getMetricUuid())).findFirst();
 //                Metrics metrics = dao.getMetricsByUuid(perf.getMetricUuid());
                 if (metrics.isPresent()) {
                     MetricInfo metricInfo = new MetricInfo();
@@ -472,9 +472,9 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
             }
             performanceList.add(performance);
         });
-        List<Metrics> lastMetric = metricList.stream().filter(x->x.getMetricGroup().equals("performance")
-                &&!mapp.keySet().contains(x.getUuid())).collect(Collectors.toList());
-        lastMetric.forEach(m->{
+        List<Metrics> lastMetric = metricList.stream().filter(x -> x.getMetricGroup().equals("performance")
+                && !mapp.keySet().contains(x.getUuid())).collect(Collectors.toList());
+        lastMetric.forEach(m -> {
             UpPerformance performance = new UpPerformance();
             MetricInfo metricInfo = new MetricInfo();
             BeanUtils.copyProperties(m, metricInfo);
@@ -488,14 +488,38 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     }
 
     @Override
-    public List<AlertRuleTemplateEntity> getAllTemplate() {
-        return dao.getAllTemplate();
+    public PageBean getAllTemplate(PageData view, String type) {
+        List<String> lightTypeList = new ArrayList<>();
+        if (type.equals(MonitorEnum.MiddleTypeEnum.NETWORK_DEVICE.value())) {
+            lightTypeList.add(MonitorEnum.LightTypeEnum.SWITCH.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.ROUTER.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.LB.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.FIREWALL.value());
+        } else if (type.equals(MonitorEnum.MiddleTypeEnum.DATABASE.value())) {
+            lightTypeList.add(MonitorEnum.LightTypeEnum.MYSQL.value());
+        } else if (type.equals(MonitorEnum.MiddleTypeEnum.MIDDLEWARE.value())) {
+            lightTypeList.add(MonitorEnum.LightTypeEnum.TOMCAT.value());
+        }else if (type.equals(MonitorEnum.MiddleTypeEnum.VIRTUALIZATION.value())) {
+            lightTypeList.add(MonitorEnum.LightTypeEnum.CAS.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.CVK.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.VIRTUALMACHINE.value());
+        }else if (type.equals(MonitorEnum.MiddleTypeEnum.CONTAINER.value())) {
+            lightTypeList.add(MonitorEnum.LightTypeEnum.K8S.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.K8SNODE.value());
+            lightTypeList.add(MonitorEnum.LightTypeEnum.K8SCONTAINER.value());
+        }
+        //lightypelist size为0 则为all
+        List<AlertRuleTemplateEntity> list = dao.getAllTemplate(lightTypeList);
+        PageBean pageBean = new PageBean(view.getPageIndex(), view.getPageSize(), list.size());
+        List<AlertRuleTemplateEntity> mylist = dao.getTemplateByPage(pageBean.getStartIndex(), view.getPageSize(), lightTypeList);
+        pageBean.setList(mylist);
+        return pageBean;
     }
 
     @Override
     public AlertAvlRuleEntity getAvlRuleByRuleUuid(String uuid) {
         List<AlertAvlRuleEntity> avls = dao.getAvlRuleByRuleUuid(uuid);
-        if (avls.size()>0){
+        if (avls.size() > 0) {
             return avls.get(0);
         }
         return null;
@@ -504,7 +528,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
     @Override
     public AlertPerfRuleEntity getPerfRuleByRuleUuid(String uuid) {
         List<AlertPerfRuleEntity> perfs = dao.getPerfRuleByRuleUuid(uuid);
-        if (perfs.size()>0){
+        if (perfs.size() > 0) {
             return perfs.get(0);
         }
         return null;
@@ -517,19 +541,19 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
 
     @Override
     public Metrics getMetricInfoByRule(String type, String ruleId) {
-        String metricUuid ="";
-        if (type.equals("avl")){
+        String metricUuid = "";
+        if (type.equals("avl")) {
             List<AlertAvlRuleEntity> avls = dao.getAvlRuleByRuleUuid(ruleId);
-            if (avls.size()>0){
+            if (avls.size() > 0) {
                 metricUuid = avls.get(0).getMetricUuid();
             }
-        }else {
+        } else {
             List<AlertPerfRuleEntity> perfs = dao.getPerfRuleByRuleUuid(ruleId);
-            if (perfs.size()>0){
+            if (perfs.size() > 0) {
                 metricUuid = perfs.get(0).getMetricUuid();
             }
         }
-        Metrics metric= dao.getMetricsByUuid(metricUuid);
+        Metrics metric = dao.getMetricsByUuid(metricUuid);
         return metric;
     }
 
@@ -553,7 +577,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         }
         Map<String, String> labels = new HashMap<>();
         labels.put("severity", ruleEntity.getSeverity());
-        labels.put("rule_id",ruleEntity.getUuid());
+        labels.put("rule_id", ruleEntity.getUuid());
         rule.setLabels(labels);
         Map<String, String> annotations = new HashMap<>();
         annotations.put("description", ruleEntity.getDescription());
@@ -586,7 +610,7 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         rule.setExpr(expr);
         Map<String, String> labels = new HashMap<>();
         labels.put("severity", ruleEntity.getSeverity());
-        labels.put("rule_id",ruleEntity.getUuid());
+        labels.put("rule_id", ruleEntity.getUuid());
         rule.setLabels(labels);
         Map<String, String> annotations = new HashMap<>();
         annotations.put("description", ruleEntity.getDescription());
