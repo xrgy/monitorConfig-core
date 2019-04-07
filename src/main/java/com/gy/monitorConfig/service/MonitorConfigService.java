@@ -169,4 +169,6 @@ public interface MonitorConfigService {
     Metrics getMetricByUuid(String uuid);
 
     Metrics getMetricInfoByRule(String type, String ruleId);
+
+    List<AlertRuleTemplateEntity> getAllTemplateNo();
 }

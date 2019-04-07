@@ -613,6 +613,11 @@ public class MonitorConfigServiceImpl implements MonitorConfigService {
         return metric;
     }
 
+    @Override
+    public List<AlertRuleTemplateEntity> getAllTemplateNo() {
+        return dao.getAllTemplateNo();
+    }
+
     private IssueAvlMonitorRuleEntity convertMonitorPerf2IssueAvl(AlertAvlRuleEntity avlRuleEntity, AlertAvlRuleMonitorEntity avlMonitor) {
         IssueAvlMonitorRuleEntity avlMonitorRuleEntity = new IssueAvlMonitorRuleEntity();
         avlMonitorRuleEntity.setUuid(avlRuleEntity.getUuid());

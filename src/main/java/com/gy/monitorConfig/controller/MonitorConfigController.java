@@ -142,6 +142,12 @@ public class MonitorConfigController {
         return mapper.writeValueAsString(service.getAllTemplate(view,type));
     }
 
+    @RequestMapping("getAllTemplateNo")
+    @ResponseBody
+    public String getAllTemplateNo() throws IOException {
+        return mapper.writeValueAsString(service.getAllTemplateNo());
+    }
+
 
     @RequestMapping("getAvlRule")
     @ResponseBody

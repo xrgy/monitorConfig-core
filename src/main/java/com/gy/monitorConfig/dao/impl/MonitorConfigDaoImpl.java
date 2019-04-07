@@ -389,6 +389,13 @@ public class MonitorConfigDaoImpl implements MonitorConfigDao {
         return res > 0;
     }
 
+    @Override
+    public List<AlertRuleTemplateEntity> getAllTemplateNo() {
+        String sql = "FROM AlertRuleTemplateEntity";
+        return em.createQuery(sql,AlertRuleTemplateEntity.class)
+                .getResultList();
+    }
+
 
 //    @Override
 //    public List<AlertRuleTemplateMonitorEntity> getTemplateMonitorByTemplateUuid(String uuid) {

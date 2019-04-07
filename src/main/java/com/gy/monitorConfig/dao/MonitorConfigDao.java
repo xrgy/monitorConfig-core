@@ -243,4 +243,7 @@ public interface MonitorConfigDao {
     boolean delPerfByUuid(String uuid);
 
     boolean delPerfByTemAndMetric(String uuid, String metricUuid);
+
+
+    List<AlertRuleTemplateEntity> getAllTemplateNo();
 }
